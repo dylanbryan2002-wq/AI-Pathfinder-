@@ -26,20 +26,19 @@ const NavItem = styled(Link)<{ $active: boolean }>`
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  color: ${({ $active, theme }) =>
-    $active ? theme.colors.nav.active : theme.colors.nav.inactive};
+  color: ${({ $active }) => ($active ? '#000000' : '#9CA3AF')};
   transition: ${({ theme }) => theme.transitions.fast};
   cursor: pointer;
   position: relative;
 
   &:hover {
-    color: ${({ theme }) => theme.colors.nav.active};
+    color: #000000;
   }
 `;
 
 const NavIcon = styled.div<{ $active: boolean }>`
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -47,18 +46,19 @@ const NavIcon = styled.div<{ $active: boolean }>`
   svg {
     width: 100%;
     height: 100%;
-    fill: ${({ $active }) => ($active ? 'currentColor' : 'currentColor')};
+    fill: currentColor;
+    stroke: none;
   }
 `;
 
 const CenterButton = styled.div<{ $active: boolean }>`
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
   border-radius: ${({ theme }) => theme.borderRadius.full};
   background: ${({ $active, theme }) =>
     $active
-      ? theme.colors.nav.glow
-      : theme.colors.voice.inactive};
+      ? `radial-gradient(circle, ${theme.colors.primary.green} 0%, ${theme.colors.primary.blue} 100%)`
+      : '#E5E7EB'};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -66,36 +66,42 @@ const CenterButton = styled.div<{ $active: boolean }>`
   cursor: pointer;
   transition: ${({ theme }) => theme.transitions.normal};
 
-  ${({ $active }) =>
+  ${({ $active, theme }) =>
     $active &&
     `
-    box-shadow: 0 0 20px rgba(127, 231, 168, 0.5);
+    box-shadow:
+      0 0 40px rgba(124, 252, 0, 0.8),
+      0 0 60px rgba(0, 229, 204, 0.6),
+      0 0 80px rgba(0, 191, 255, 0.4);
     animation: pulse 2s ease-in-out infinite;
   `}
 
   @keyframes pulse {
     0%, 100% {
-      box-shadow: 0 0 20px rgba(127, 231, 168, 0.5);
+      box-shadow:
+        0 0 40px rgba(124, 252, 0, 0.8),
+        0 0 60px rgba(0, 229, 204, 0.6),
+        0 0 80px rgba(0, 191, 255, 0.4);
     }
     50% {
-      box-shadow: 0 0 30px rgba(79, 164, 254, 0.7);
+      box-shadow:
+        0 0 50px rgba(124, 252, 0, 1),
+        0 0 70px rgba(0, 229, 204, 0.8),
+        0 0 100px rgba(0, 191, 255, 0.6);
     }
   }
 
   &:hover {
-    transform: scale(1.05);
+    transform: scale(1.08);
   }
 `;
 
 const CenterButtonInner = styled.div`
-  width: 24px;
-  height: 24px;
-
-  svg {
-    width: 100%;
-    height: 100%;
-    fill: ${({ theme }) => theme.colors.text.white};
-  }
+  width: 16px;
+  height: 16px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.9) 40%, rgba(255, 255, 255, 0) 100%);
+  border-radius: 50%;
+  filter: blur(1px);
 `;
 
 export function Navigation() {
@@ -116,12 +122,7 @@ export function Navigation() {
 
       {/* Center AI Button */}
       <CenterButton $active={isActive('/chat')} as={Link} href="/chat">
-        <CenterButtonInner>
-          {/* AI Icon / Voice Blob */}
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="10" />
-          </svg>
-        </CenterButtonInner>
+        <CenterButtonInner />
       </CenterButton>
 
       {/* Jobs/Briefcase Icon */}

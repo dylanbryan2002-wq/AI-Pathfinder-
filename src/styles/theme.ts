@@ -5,9 +5,9 @@ export const theme = {
   colors: {
     // Primary Brand Colors
     primary: {
-      green: '#7FE7A8',      // Main green from logo
-      blue: '#4FA4FE',       // Main blue from logo
-      gradient: 'linear-gradient(90deg, #7FE7A8 0%, #4FA4FE 100%)',
+      green: '#7CFC00',      // Super bright lime green from logo (ai)
+      blue: '#00BFFF',       // Deep sky blue from logo (finder)
+      gradient: 'linear-gradient(90deg, #7CFC00 0%, #00E5CC 50%, #00BFFF 100%)',
     },
 
     // Secondary Colors
@@ -68,8 +68,8 @@ export const theme = {
 
     // Voice Mode
     voice: {
-      blob: '#7FE7A8',       // Green animated blob
-      active: '#4FA4FE',     // Blue when speaking
+      blob: '#7CFC00',       // Super bright lime green animated blob
+      active: '#00BFFF',     // Deep sky blue when speaking
       inactive: '#E5E7EB',   // Gray when inactive
     },
 
@@ -77,7 +77,7 @@ export const theme = {
     nav: {
       active: '#000000',
       inactive: '#9CA3AF',
-      glow: 'radial-gradient(circle, rgba(127, 231, 168, 0.6) 0%, rgba(79, 164, 254, 0.6) 100%)',
+      glow: 'radial-gradient(circle, rgba(124, 252, 0, 1) 0%, rgba(0, 229, 204, 0.9) 50%, rgba(0, 191, 255, 1) 100%)',
     },
   },
 

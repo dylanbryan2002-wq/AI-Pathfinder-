@@ -11,8 +11,10 @@ const Container = styled.div`
 
 const Header = styled.div`
   background: ${({ theme }) => theme.colors.background.secondary};
-  border-bottom: 2px solid #E5E7EB;
-  padding: 1rem;
+  border: 3px solid #4A9BFF;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -25,13 +27,16 @@ const Logo = styled.div`
 `;
 
 const LogoText = styled.h1`
-  font-size: ${({ theme }) => theme.typography.fontSize['2xl']};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  font-family: 'Quicksand', -apple-system, sans-serif;
+  font-size: 2rem;
+  font-weight: 600;
   background: ${({ theme }) => theme.colors.primary.gradient};
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin: 0;
+  text-transform: lowercase;
+  letter-spacing: -0.5px;
 `;
 
 const HeaderIcons = styled.div`
