@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/originals/C/**)",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/originals/D/**)",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/originals/6/**)",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/originals/3/**)",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/originals/1/**)",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/originals/7/**)",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/originals/8/**)",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/originals/4/**)",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/originals/B/**)",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/originals/0/**)",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/originals/E/**)",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/originals/9/**)",
+      "Bash(npm init:*)",
+      "Bash(npm install:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
