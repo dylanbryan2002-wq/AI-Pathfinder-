@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import StyledComponentsRegistry from "@/lib/registry";
+import { ThemeProvider } from "@/lib/ThemeProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -10,12 +11,14 @@ export const metadata: Metadata = {
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.Node;
+  children: React.ReactNode;
 }>) {
   return (
     <html lang="en">
       <body>
-        <StyledComponentsRegistry>{children}</StyledComponentsRegistry>
+        <StyledComponentsRegistry>
+          <ThemeProvider>{children}</ThemeProvider>
+        </StyledComponentsRegistry>
       </body>
     </html>
   );
