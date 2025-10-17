@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import styled from 'styled-components';
 
@@ -84,6 +84,33 @@ const MessageBubble = styled.div<{ $isAi: boolean }>`
   box-shadow: ${({ theme }) => theme.shadows.card};
   font-size: ${({ theme }) => theme.typography.fontSize.base};
   line-height: ${({ theme }) => theme.typography.lineHeight.relaxed};
+  white-space: pre-wrap;
+  word-wrap: break-word;
+
+  p {
+    margin: 0.5rem 0;
+
+    &:first-child {
+      margin-top: 0;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  strong {
+    font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  }
+
+  ul, ol {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+  }
+
+  li {
+    margin: 0.25rem 0;
+  }
 `;
 
 const TypingIndicator = styled.div`
@@ -243,6 +270,44 @@ export function ChatInterface() {
   const [isVoiceMode, setIsVoiceMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isMatching, setIsMatching] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
+  const chatAreaRef = useRef<HTMLDivElement>(null);
+
+  // Load chat history when user logs in
+  useEffect(() => {
+    if (session?.user?.id && !historyLoaded) {
+      loadChatHistory();
+    }
+  }, [session?.user?.id]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (chatAreaRef.current) {
+      chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
+    }
+  }, [messages, isLoading]);
+
+  const loadChatHistory = async () => {
+    try {
+      const response = await fetch(`/api/chat?userId=${session?.user?.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.messages && data.messages.length > 0) {
+          const loadedMessages: Message[] = data.messages.map((msg: any) => ({
+            id: msg.id,
+            content: msg.content,
+            isAi: msg.role === 'assistant',
+          }));
+          // Append loaded messages after the welcome messages
+          setMessages(prev => [...prev, ...loadedMessages]);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+    } finally {
+      setHistoryLoaded(true);
+    }
+  };
 
   const handleSend = async () => {
     if (!inputValue.trim() || isLoading) return;
@@ -318,6 +383,22 @@ export function ChatInterface() {
     }
   };
 
+  const handleNewChat = () => {
+    setMessages([
+      {
+        id: '1',
+        content: 'Hi there! My name is AI Pathfinder. Think of me like your personal career advisor. I can help you discover careers that match your interests, skills, and goals. What would you like to explore today?',
+        isAi: true,
+      },
+      {
+        id: '2',
+        content: 'By the way, we can communicate through text, but most people find they get clearer recommendations and a faster match when they switch to voice mode. Feel free to ask me anything!',
+        isAi: true,
+      },
+    ]);
+    setInputValue('');
+  };
+
   const handleMatchCareers = async () => {
     if (!session?.user) {
       const errorMessage: Message = {
@@ -379,7 +460,13 @@ export function ChatInterface() {
           <LogoText>ai-pathfinder</LogoText>
         </Logo>
         <HeaderIcons>
-          <IconButton>
+          <IconButton onClick={handleNewChat} title="Start new chat">
+            {/* New Chat Icon */}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          </IconButton>
+          <IconButton onClick={() => window.location.href = '/bookmarks'} title="Bookmarks">
             {/* Bookmark Icon */}
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
@@ -396,7 +483,7 @@ export function ChatInterface() {
         </HeaderIcons>
       </Header>
 
-      <ChatArea>
+      <ChatArea ref={chatAreaRef}>
         {messages.map((message) => (
           <MessageBubble key={message.id} $isAi={message.isAi}>
             {message.content}
