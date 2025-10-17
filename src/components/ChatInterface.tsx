@@ -420,12 +420,18 @@ export function ChatInterface() {
       const data = await response.json();
 
       if (response.ok) {
+        const topMatch = data.matches[0];
         const successMessage: Message = {
           id: Date.now().toString(),
-          content: `Great news! I've analyzed our conversation and found ${data.totalMatches} career matches for you! Your top match is ${data.matches[0]?.career.title} with a ${data.matches[0]?.matchPercentage}% match. Check out the Careers page to see all your matches!`,
+          content: `🎉 Great news! I've analyzed our conversation and found ${data.totalMatches} career matches for you!\n\nYour top match is "${topMatch?.career.title}" with a ${topMatch?.matchPercentage}% match!\n\n${topMatch?.matchReason}\n\nHead over to the Careers page to explore all your personalized matches and take the next steps!`,
           isAi: true,
         };
         setMessages(prev => [...prev, successMessage]);
+
+        // Redirect to careers page after 3 seconds
+        setTimeout(() => {
+          window.location.href = '/careers';
+        }, 3000);
       } else {
         const errorMessage: Message = {
           id: Date.now().toString(),
