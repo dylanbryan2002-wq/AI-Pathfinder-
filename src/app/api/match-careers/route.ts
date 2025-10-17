@@ -64,7 +64,7 @@ Based on this conversation, extract and return a JSON object with:
 Only include information explicitly mentioned or strongly implied in the conversation. Return valid JSON only.`;
 
     const analysisResponse = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
+      model: 'gpt-4o',
       messages: [
         { role: 'system', content: 'You are a career counseling analyst. Extract user profile data from conversations and return only valid JSON.' },
         { role: 'user', content: analysisPrompt },
@@ -120,17 +120,26 @@ Return a JSON array sorted by match percentage (highest first):
 Return valid JSON only. Include all careers, even with low matches.`;
 
     const matchingResponse = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
+      model: 'gpt-4o',
       messages: [
-        { role: 'system', content: 'You are a career matching expert. Analyze user profiles and match them with careers. Return only valid JSON.' },
+        { role: 'system', content: 'You are a career matching expert. Analyze user profiles and match them with careers based on interests, skills, values, personality, and goals. Return only valid JSON.' },
         { role: 'user', content: matchingPrompt },
       ],
       temperature: 0.5,
+      max_tokens: 4000,
       response_format: { type: 'json_object' },
     });
 
     const matchesData = JSON.parse(matchingResponse.choices[0].message.content || '{"matches":[]}');
-    const matches = matchesData.matches || matchesData;
+    let matches = matchesData.matches || matchesData;
+
+    // Ensure matches is an array
+    if (!Array.isArray(matches)) {
+      matches = [];
+    }
+
+    // Sort by match percentage
+    matches.sort((a: any, b: any) => b.matchPercentage - a.matchPercentage);
 
     // Save career matches to database
     // First, delete existing matches for this user
@@ -138,23 +147,30 @@ Return valid JSON only. Include all careers, even with low matches.`;
       where: { userId },
     });
 
-    // Create new matches
-    const careerMatches = await Promise.all(
-      matches.slice(0, 10).map(async (match: any) => {
-        return prisma.careerMatch.create({
+    // Create new matches (top 10)
+    const careerMatches = [];
+    for (const match of matches.slice(0, 10)) {
+      try {
+        const careerMatch = await prisma.careerMatch.create({
           data: {
             userId,
             careerId: match.careerId,
             matchPercentage: Math.round(match.matchPercentage),
-            matchReason: match.matchReason,
+            matchReason: match.matchReason || 'Match based on your profile',
             matchData: match.breakdown || {},
           },
           include: {
             career: true,
           },
         });
-      })
-    );
+        careerMatches.push(careerMatch);
+      } catch (err) {
+        console.error(`Failed to create match for career ${match.careerId}:`, err);
+        // Continue with other matches
+      }
+    }
+
+    console.log(`✅ Generated ${careerMatches.length} career matches for user ${userId}`);
 
     return NextResponse.json({
       message: 'Career matches generated successfully',
