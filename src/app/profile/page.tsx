@@ -1,0 +1,707 @@
+'use client';
+
+import styled from 'styled-components';
+import { Navigation } from '@/components/Navigation';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+
+const PageContainer = styled.div`
+  min-height: 100vh;
+  background: ${({ theme }) => theme.colors.background.primary};
+  padding-bottom: 80px;
+`;
+
+const Header = styled.div`
+  background: ${({ theme }) => theme.colors.background.secondary};
+  border: 3px solid #4A9BFF;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+`;
+
+const Logo = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const LogoIcon = styled.div`
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme.colors.primary.gradient};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 1.25rem;
+`;
+
+const LogoText = styled.h1`
+  font-family: 'Quicksand', -apple-system, sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  background: ${({ theme }) => theme.colors.primary.gradient};
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  text-transform: lowercase;
+`;
+
+const SettingsButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  color: ${({ theme }) => theme.colors.text.secondary};
+
+  svg {
+    width: 24px;
+    height: 24px;
+  }
+`;
+
+const ContentArea = styled.div`
+  padding: 1rem;
+`;
+
+const ProfileSection = styled.div`
+  background: ${({ theme }) => theme.colors.background.card};
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  padding: 1.5rem;
+  box-shadow: ${({ theme }) => theme.shadows.card};
+  margin-bottom: 1.5rem;
+  text-align: center;
+`;
+
+const Avatar = styled.div`
+  width: 96px;
+  height: 96px;
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  background: ${({ theme }) => theme.colors.primary.gradient};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  font-size: ${({ theme }) => theme.typography.fontSize['3xl']};
+  margin: 0 auto 1rem;
+`;
+
+const UserName = styled.h2`
+  font-size: ${({ theme }) => theme.typography.fontSize['2xl']};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin: 0 0 0.5rem 0;
+`;
+
+const UserBio = styled.p`
+  font-size: ${({ theme }) => theme.typography.fontSize.base};
+  color: ${({ theme }) => theme.colors.text.secondary};
+  line-height: ${({ theme }) => theme.typography.lineHeight.relaxed};
+  margin: 0;
+`;
+
+const ProgressSliderSection = styled.div`
+  background: ${({ theme }) => theme.colors.background.card};
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  padding: 1.5rem;
+  box-shadow: ${({ theme }) => theme.shadows.card};
+  margin-bottom: 1.5rem;
+`;
+
+const SliderTitle = styled.h3`
+  font-size: ${({ theme }) => theme.typography.fontSize.lg};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin: 0 0 1.5rem 0;
+  text-align: center;
+`;
+
+const SliderContainer = styled.div`
+  position: relative;
+  padding: 2rem 0;
+`;
+
+const SliderTrack = styled.div`
+  position: relative;
+  height: 8px;
+  background: ${({ theme }) => theme.colors.background.primary};
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  overflow: hidden;
+`;
+
+const SliderFill = styled.div<{ $value: number }>`
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: ${({ $value }) => $value}%;
+  background: ${({ theme }) => theme.colors.primary.gradient};
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  transition: width 0.3s ease;
+`;
+
+const SliderThumb = styled.div<{ $value: number }>`
+  position: absolute;
+  top: 50%;
+  left: ${({ $value }) => $value}%;
+  transform: translate(-50%, -50%);
+  width: 24px;
+  height: 24px;
+  background: white;
+  border: 4px solid ${({ theme }) => theme.colors.primary.blue};
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  cursor: pointer;
+  box-shadow: ${({ theme }) => theme.shadows.md};
+  transition: left 0.3s ease;
+
+  &:hover {
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+`;
+
+const SliderLabels = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+`;
+
+const SliderLabel = styled.div`
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  color: ${({ theme }) => theme.colors.text.secondary};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+`;
+
+const SectionTitle = styled.h3`
+  font-size: ${({ theme }) => theme.typography.fontSize.xl};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin: 0 0 1rem 0;
+`;
+
+const HighlightsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+`;
+
+const HighlightCard = styled.div`
+  background: ${({ theme }) => theme.colors.background.card};
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 1rem;
+  box-shadow: ${({ theme }) => theme.shadows.card};
+  text-align: center;
+`;
+
+const HighlightValue = styled.div`
+  font-size: ${({ theme }) => theme.typography.fontSize['2xl']};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin-bottom: 0.25rem;
+`;
+
+const HighlightLabel = styled.div`
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  color: ${({ theme }) => theme.colors.text.secondary};
+`;
+
+const PsychometricGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+`;
+
+const PsychometricCard = styled.div<{ $gradient: string }>`
+  background: ${({ $gradient }) => $gradient};
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  padding: 1.5rem;
+  box-shadow: ${({ theme }) => theme.shadows.card};
+  cursor: pointer;
+  transition: ${({ theme }) => theme.transitions.normal};
+  position: relative;
+  overflow: hidden;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: ${({ theme }) => theme.shadows.xl};
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.1);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover::before {
+    opacity: 1;
+  }
+`;
+
+const PsychometricIcon = styled.div`
+  font-size: ${({ theme }) => theme.typography.fontSize['3xl']};
+  margin-bottom: 0.5rem;
+`;
+
+const PsychometricTitle = styled.h4`
+  font-size: ${({ theme }) => theme.typography.fontSize.lg};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  color: white;
+  margin: 0 0 0.5rem 0;
+`;
+
+const PsychometricStatus = styled.div`
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+`;
+
+const ActionButton = styled.button`
+  width: 100%;
+  background: ${({ theme }) => theme.colors.button.commit};
+  color: white;
+  border: none;
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  padding: 1rem 1.5rem;
+  font-size: ${({ theme }) => theme.typography.fontSize.base};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  cursor: pointer;
+  transition: ${({ theme }) => theme.transitions.fast};
+  margin-top: 1.5rem;
+
+  &:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+  }
+`;
+
+const ActionPlanSection = styled.div`
+  background: ${({ theme }) => theme.colors.background.card};
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  padding: 1.5rem;
+  box-shadow: ${({ theme }) => theme.shadows.card};
+  margin-bottom: 1.5rem;
+`;
+
+const ActionPlanHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+`;
+
+const ActionPlanTitle = styled.h3`
+  font-size: ${({ theme }) => theme.typography.fontSize.lg};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin: 0;
+`;
+
+const ViewAllButton = styled.button`
+  background: none;
+  border: none;
+  color: ${({ theme }) => theme.colors.primary.blue};
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  cursor: pointer;
+  text-decoration: underline;
+
+  &:hover {
+    opacity: 0.8;
+  }
+`;
+
+const CommittedCareerCard = styled.div`
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-left: 4px solid ${({ theme }) => theme.colors.primary.blue};
+`;
+
+const CareerName = styled.div`
+  font-size: ${({ theme }) => theme.typography.fontSize.base};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin-bottom: 0.5rem;
+`;
+
+const ProgressBarContainer = styled.div`
+  width: 100%;
+  height: 8px;
+  background: ${({ theme }) => theme.colors.background.primary};
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+`;
+
+const ProgressBarFill = styled.div<{ $progress: number }>`
+  width: ${({ $progress }) => $progress}%;
+  height: 100%;
+  background: ${({ theme }) => theme.colors.primary.gradient};
+  transition: width 0.5s ease;
+`;
+
+const ProgressText = styled.div`
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  color: ${({ theme }) => theme.colors.text.secondary};
+`;
+
+const NextStepCard = styled.div`
+  background: white;
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+`;
+
+const NextStepLabel = styled.div`
+  font-size: ${({ theme }) => theme.typography.fontSize.xs};
+  color: ${({ theme }) => theme.colors.text.secondary};
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+`;
+
+const NextStepTitle = styled.div`
+  font-size: ${({ theme }) => theme.typography.fontSize.base};
+  color: ${({ theme }) => theme.colors.text.primary};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+`;
+
+const psychometricCategories = [
+  {
+    id: 'personality',
+    title: 'Personality',
+    icon: '🧠',
+    status: 'Completed',
+    gradient: 'linear-gradient(135deg, #EF4444 0%, #8B5CF6 100%)'
+  },
+  {
+    id: 'skills',
+    title: 'Skills',
+    icon: '⚡',
+    status: 'Completed',
+    gradient: 'linear-gradient(135deg, #14B8A6 0%, #FBBF24 100%)'
+  },
+  {
+    id: 'goals',
+    title: 'Goals',
+    icon: '🎯',
+    status: 'Completed',
+    gradient: 'linear-gradient(135deg, #93C5FD 0%, #7FE7A8 100%)'
+  },
+  {
+    id: 'values',
+    title: 'Values',
+    icon: '💎',
+    status: 'Completed',
+    gradient: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)'
+  },
+  {
+    id: 'interest',
+    title: 'Interest',
+    icon: '❤️',
+    status: 'In Progress',
+    gradient: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)'
+  },
+  {
+    id: 'beliefs',
+    title: 'Beliefs',
+    icon: '✨',
+    status: 'Not Started',
+    gradient: 'linear-gradient(135deg, #FBBF24 0%, #F472B6 100%)'
+  },
+];
+
+export default function ProfilePage() {
+  const { data: session } = useSession();
+  const router = useRouter();
+  const [profileData, setProfileData] = useState<any>(null);
+  const [committedCareer, setCommittedCareer] = useState<any>(null);
+  const [careerDetails, setCareerDetails] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!session?.user) {
+      router.push('/login');
+      return;
+    }
+    fetchProfile();
+    fetchCommittedCareer();
+  }, [session, router]);
+
+  const fetchProfile = async () => {
+    try {
+      const response = await fetch('/api/user/profile');
+      if (response.ok) {
+        const data = await response.json();
+        setProfileData(data);
+      } else if (response.status === 401) {
+        router.push('/login');
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchCommittedCareer = async () => {
+    try {
+      const actionsResponse = await fetch('/api/user/actions');
+      const actionsData = await actionsResponse.json();
+
+      if (actionsResponse.ok && actionsData.committedCareer) {
+        setCommittedCareer(actionsData.committedCareer);
+
+        // Fetch career details
+        const careerResponse = await fetch(`/api/careers/${actionsData.committedCareer.careerId}`);
+        const careerData = await careerResponse.json();
+
+        if (careerResponse.ok) {
+          setCareerDetails(careerData.career);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching committed career:', error);
+    }
+  };
+
+  const getInitials = (name: string | null | undefined) => {
+    if (!name) return '?';
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  const getPsychometricStatus = (data: any[], category: string) => {
+    if (!data || data.length === 0) return 'Not Started';
+    if (data.length < 3) return 'In Progress';
+    return 'Completed';
+  };
+
+  if (loading) {
+    return (
+      <PageContainer>
+        <Header>
+          <Logo>
+            <LogoIcon>pf</LogoIcon>
+            <LogoText>pathfinder</LogoText>
+          </Logo>
+        </Header>
+        <ContentArea>
+          <ProfileSection>
+            <p>Loading profile...</p>
+          </ProfileSection>
+        </ContentArea>
+        <Navigation />
+      </PageContainer>
+    );
+  }
+
+  if (!profileData) {
+    return (
+      <PageContainer>
+        <Header>
+          <Logo>
+            <LogoIcon>pf</LogoIcon>
+            <LogoText>pathfinder</LogoText>
+          </Logo>
+        </Header>
+        <ContentArea>
+          <ProfileSection>
+            <p>Profile not found</p>
+          </ProfileSection>
+        </ContentArea>
+        <Navigation />
+      </PageContainer>
+    );
+  }
+
+  return (
+    <PageContainer>
+      <Header>
+        <Logo>
+          <LogoIcon>pf</LogoIcon>
+          <LogoText>pathfinder</LogoText>
+        </Logo>
+        <SettingsButton onClick={() => window.location.href = '/api/auth/signout'}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+        </SettingsButton>
+      </Header>
+
+      <ContentArea>
+        <ProfileSection>
+          <Avatar>{getInitials(profileData.name)}</Avatar>
+          <UserName>{profileData.name || 'AI Pathfinder User'}</UserName>
+          <UserBio>
+            {profileData.bio ||
+             (profileData.stats.totalMatches > 0
+               ? `Exploring ${profileData.stats.totalMatches} career matches`
+               : 'Start chatting with AI Pathfinder to discover your ideal career')}
+          </UserBio>
+        </ProfileSection>
+
+        <ProgressSliderSection>
+          <SliderTitle>Your Career Journey</SliderTitle>
+          <SliderContainer>
+            <SliderTrack>
+              <SliderFill $value={profileData.progressScore} />
+              <SliderThumb $value={profileData.progressScore} />
+            </SliderTrack>
+            <SliderLabels>
+              <SliderLabel>Moving away from</SliderLabel>
+              <SliderLabel>Moving towards</SliderLabel>
+            </SliderLabels>
+          </SliderContainer>
+        </ProgressSliderSection>
+
+        <SectionTitle>Career Highlights</SectionTitle>
+        <HighlightsGrid>
+          <HighlightCard>
+            <HighlightValue>{profileData.stats.totalMatches}</HighlightValue>
+            <HighlightLabel>Career Matches</HighlightLabel>
+          </HighlightCard>
+          <HighlightCard>
+            <HighlightValue>{profileData.stats.careersExploring}</HighlightValue>
+            <HighlightLabel>Trying Now</HighlightLabel>
+          </HighlightCard>
+          <HighlightCard>
+            <HighlightValue>{profileData.stats.hasCommittedCareer ? 1 : 0}</HighlightValue>
+            <HighlightLabel>Committed</HighlightLabel>
+          </HighlightCard>
+          <HighlightCard>
+            <HighlightValue>{profileData.stats.totalBookmarks}</HighlightValue>
+            <HighlightLabel>Bookmarked</HighlightLabel>
+          </HighlightCard>
+        </HighlightsGrid>
+
+        {committedCareer && careerDetails && committedCareer.actionSteps && (
+          <ActionPlanSection>
+            <ActionPlanHeader>
+              <ActionPlanTitle>Your Action Plan</ActionPlanTitle>
+              <ViewAllButton onClick={() => router.push('/action-plan')}>
+                View All Steps
+              </ViewAllButton>
+            </ActionPlanHeader>
+            <CommittedCareerCard>
+              <CareerName>{careerDetails.title}</CareerName>
+              <ProgressBarContainer>
+                <ProgressBarFill
+                  $progress={
+                    committedCareer.actionSteps.steps
+                      ? Math.round((committedCareer.actionSteps.steps.filter((s: any) => s.completed).length / committedCareer.actionSteps.steps.length) * 100)
+                      : 0
+                  }
+                />
+              </ProgressBarContainer>
+              <ProgressText>
+                {committedCareer.actionSteps.steps
+                  ? `${committedCareer.actionSteps.steps.filter((s: any) => s.completed).length} of ${committedCareer.actionSteps.steps.length} steps completed`
+                  : 'Action plan generating...'}
+              </ProgressText>
+            </CommittedCareerCard>
+            {committedCareer.actionSteps.steps && committedCareer.actionSteps.steps.length > 0 && (
+              <NextStepCard>
+                <NextStepLabel>Next Step</NextStepLabel>
+                <NextStepTitle>
+                  {committedCareer.actionSteps.steps.find((s: any) => !s.completed)?.title || 'All steps completed! 🎉'}
+                </NextStepTitle>
+              </NextStepCard>
+            )}
+          </ActionPlanSection>
+        )}
+
+        <SectionTitle>Self-Awareness Profile</SectionTitle>
+        <PsychometricGrid>
+          {[
+            {
+              id: 'personality',
+              title: 'Personality',
+              icon: '🧠',
+              status: getPsychometricStatus(profileData.personality, 'personality'),
+              gradient: 'linear-gradient(135deg, #EF4444 0%, #8B5CF6 100%)',
+              data: profileData.personality,
+            },
+            {
+              id: 'skills',
+              title: 'Skills',
+              icon: '⚡',
+              status: getPsychometricStatus(profileData.skills, 'skills'),
+              gradient: 'linear-gradient(135deg, #14B8A6 0%, #FBBF24 100%)',
+              data: profileData.skills,
+            },
+            {
+              id: 'goals',
+              title: 'Goals',
+              icon: '🎯',
+              status: getPsychometricStatus(profileData.goals, 'goals'),
+              gradient: 'linear-gradient(135deg, #93C5FD 0%, #7FE7A8 100%)',
+              data: profileData.goals,
+            },
+            {
+              id: 'values',
+              title: 'Values',
+              icon: '💎',
+              status: getPsychometricStatus(profileData.values, 'values'),
+              gradient: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
+              data: profileData.values,
+            },
+            {
+              id: 'interest',
+              title: 'Interests',
+              icon: '❤️',
+              status: getPsychometricStatus(profileData.interests, 'interests'),
+              gradient: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
+              data: profileData.interests,
+            },
+            {
+              id: 'workExperience',
+              title: 'Experience',
+              icon: '💼',
+              status: getPsychometricStatus(profileData.workExperience, 'experience'),
+              gradient: 'linear-gradient(135deg, #FBBF24 0%, #F472B6 100%)',
+              data: profileData.workExperience,
+            },
+          ].map((category) => (
+            <PsychometricCard
+              key={category.id}
+              $gradient={category.gradient}
+              title={category.data && category.data.length > 0 ? category.data.join(', ') : 'Not yet analyzed'}
+            >
+              <div>
+                <PsychometricIcon>{category.icon}</PsychometricIcon>
+                <PsychometricTitle>{category.title}</PsychometricTitle>
+              </div>
+              <PsychometricStatus>{category.status}</PsychometricStatus>
+            </PsychometricCard>
+          ))}
+        </PsychometricGrid>
+
+        <ActionButton onClick={() => router.push('/chat')}>
+          {profileData.stats.hasChatHistory ? 'Continue Conversation' : 'Start Your Career Journey'}
+        </ActionButton>
+      </ContentArea>
+
+      <Navigation />
+    </PageContainer>
+  );
+}

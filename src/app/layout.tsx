@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import StyledComponentsRegistry from "@/lib/registry";
 import { ThemeProvider } from "@/lib/ThemeProvider";
+import { AuthProvider } from "@/components/Providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,7 +18,9 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <StyledComponentsRegistry>
-          <ThemeProvider>{children}</ThemeProvider>
+          <ThemeProvider>
+            <AuthProvider>{children}</AuthProvider>
+          </ThemeProvider>
         </StyledComponentsRegistry>
       </body>
     </html>

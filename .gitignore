@@ -46,3 +46,5 @@ prisma/migrations
 # Downloads/temp files
 gh.zip
 gh_2.37.0_macOS_amd64/
+
+/src/generated/prisma

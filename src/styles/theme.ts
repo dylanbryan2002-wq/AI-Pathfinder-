@@ -51,9 +51,9 @@ export const theme = {
 
     // Match Percentage Colors
     match: {
-      high: '#10B981',       // 90%+ match (green)
-      medium: '#F59E0B',     // 70-89% match (orange)
-      low: '#6B7280',        // <70% match (gray)
+      high: '#10B981',       // 75%+ match (green)
+      medium: '#F59E0B',     // 50-74% match (yellow/orange)
+      low: '#EF4444',        // <50% match (red)
     },
 
     // Gradients for psychometric cards

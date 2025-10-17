@@ -1,0 +1,257 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String?  // Hashed password (optional for OAuth users)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Profile data
+  bio       String?
+  avatar    String?
+
+  // Psychometric data
+  personalityData Json?
+  skillsData      Json?
+  goalsData       Json?
+  valuesData      Json?
+  interestData    Json?
+  beliefsData     Json?
+  workExperience  Json?
+
+  // Progress tracking
+  progressScore   Float?  @default(50) // 0-100 scale for "moving away from" to "moving towards"
+
+  // Relationships
+  messages        Message[]
+  careerMatches   CareerMatch[]
+  triedCareers    TriedCareer[]
+  committedCareer CommittedCareer?
+  bookmarks       Bookmark[]
+  jobApplications JobApplication[]
+  accounts        Account[]
+  sessions        Session[]
+
+  @@map("users")
+}
+
+model Career {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Career details
+  avgSalary      String?
+  salaryRange    Json? // { min, max, percentiles: [10, 25, 50, 75, 90] }
+  requirements   String?
+  education      String?
+  growth         String?
+  dayInLife      String?
+  dayInLifeList  Json? // Array of bullet points
+
+  // External IDs
+  onetCode       String? // O*NET SOC code
+  blsCode        String? // BLS occupation code
+
+  // Relationships
+  careerMatches  CareerMatch[]
+  triedCareers   TriedCareer[]
+  committedCareer CommittedCareer[]
+
+  @@map("careers")
+}
+
+model CareerMatch {
+  id        String   @id @default(cuid())
+  userId    String
+  careerId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Match details
+  matchPercentage Int // 0-100
+  matchReason     String?
+  matchData       Json? // Detailed breakdown by category (interest, goals, skills, etc.)
+
+  // Relationships
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  career Career @relation(fields: [careerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, careerId])
+  @@map("career_matches")
+}
+
+model TriedCareer {
+  id        String   @id @default(cuid())
+  userId    String
+  careerId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Exploration progress
+  progress Int @default(0) // 0-100
+
+  // Relationships
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  career Career @relation(fields: [careerId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, careerId])
+  @@map("tried_careers")
+}
+
+model CommittedCareer {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  careerId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Action plan
+  actionSteps Json? // Array of steps with { title, description, completed }
+
+  // Relationships
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  career Career @relation(fields: [careerId], references: [id], onDelete: Cascade)
+
+  @@map("committed_careers")
+}
+
+model Job {
+  id        String   @id @default(cuid())
+  title     String
+  company   String
+  location  String
+  type      String // Full-time, Part-time, Remote, etc.
+  salary    String?
+  description String
+  tags      Json? // Array of skill tags
+  postedAt  DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // External data
+  sourceUrl     String?
+  externalId    String?
+  source        String? // "Adzuna", "Indeed", etc.
+
+  // Relationships
+  applications  JobApplication[]
+
+  // Indexes for faster searches
+  @@index([title])
+  @@index([location])
+  @@index([type])
+  @@index([postedAt])
+  @@index([externalId, source])
+  @@map("jobs")
+}
+
+model JobApplication {
+  id        String   @id @default(cuid())
+  userId    String
+  jobId     String
+  status    String   @default("applied") // applied, interviewing, offered, rejected
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
+  @@map("job_applications")
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String // "career", "job"
+  targetId  String // careerId or jobId
+  createdAt DateTime @default(now())
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, type, targetId])
+  @@map("bookmarks")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  userId    String
+  role      String // "user" or "assistant"
+  content   String
+  createdAt DateTime @default(now())
+
+  // Session tracking
+  sessionId String?
+
+  // Relationships
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model ConversationSession {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("conversation_sessions")
+}
+
+// NextAuth models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
