@@ -1,8 +1,9 @@
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Navigation } from '@/components/Navigation';
-import { useState, useEffect } from 'react';
+import { Logo } from '@/components/Logo';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
@@ -21,37 +22,6 @@ const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-`;
-
-const Logo = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-`;
-
-const LogoIcon = styled.div`
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: ${({ theme }) => theme.colors.primary.gradient};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: bold;
-  font-size: 1.25rem;
-`;
-
-const LogoText = styled.h1`
-  font-family: 'Quicksand', -apple-system, sans-serif;
-  font-size: 1.5rem;
-  font-weight: 600;
-  background: ${({ theme }) => theme.colors.primary.gradient};
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0;
-  text-transform: lowercase;
 `;
 
 const SettingsButton = styled.button`
@@ -116,67 +86,78 @@ const ProgressSliderSection = styled.div`
   margin-bottom: 1.5rem;
 `;
 
-const SliderTitle = styled.h3`
-  font-size: ${({ theme }) => theme.typography.fontSize.lg};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0 0 1.5rem 0;
-  text-align: center;
-`;
-
-const SliderContainer = styled.div`
-  position: relative;
-  padding: 2rem 0;
-`;
-
-const SliderTrack = styled.div`
-  position: relative;
-  height: 8px;
-  background: ${({ theme }) => theme.colors.background.primary};
-  border-radius: ${({ theme }) => theme.borderRadius.full};
-  overflow: hidden;
-`;
-
-const SliderFill = styled.div<{ $value: number }>`
-  position: absolute;
-  left: 0;
-  top: 0;
-  height: 100%;
-  width: ${({ $value }) => $value}%;
-  background: ${({ theme }) => theme.colors.primary.gradient};
-  border-radius: ${({ theme }) => theme.borderRadius.full};
-  transition: width 0.3s ease;
-`;
-
-const SliderThumb = styled.div<{ $value: number }>`
-  position: absolute;
-  top: 50%;
-  left: ${({ $value }) => $value}%;
-  transform: translate(-50%, -50%);
-  width: 24px;
-  height: 24px;
-  background: white;
-  border: 4px solid ${({ theme }) => theme.colors.primary.blue};
-  border-radius: ${({ theme }) => theme.borderRadius.full};
-  cursor: pointer;
-  box-shadow: ${({ theme }) => theme.shadows.md};
-  transition: left 0.3s ease;
-
-  &:hover {
-    transform: translate(-50%, -50%) scale(1.2);
-  }
-`;
-
 const SliderLabels = styled.div`
   display: flex;
   justify-content: space-between;
-  margin-top: 1rem;
+  margin-bottom: 1.5rem;
 `;
 
 const SliderLabel = styled.div`
   font-size: ${({ theme }) => theme.typography.fontSize.sm};
   color: ${({ theme }) => theme.colors.text.secondary};
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+`;
+
+const MovingFromInput = styled.input`
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 0.75rem 1rem;
+  font-size: ${({ theme }) => theme.typography.fontSize.base};
+  color: ${({ theme }) => theme.colors.text.primary};
+  text-align: center;
+  margin-bottom: 1.5rem;
+  width: 100%;
+  outline: none;
+
+  &:focus {
+    border-color: ${({ theme }) => theme.colors.primary.blue};
+    box-shadow: 0 0 0 3px rgba(0, 191, 255, 0.1);
+  }
+
+  &::placeholder {
+    color: ${({ theme }) => theme.colors.text.tertiary};
+  }
+`;
+
+const SliderContainer = styled.div`
+  position: relative;
+  padding: 1rem 0;
+`;
+
+const SliderTrack = styled.div<{ $isDragging?: boolean }>`
+  position: relative;
+  height: 12px;
+  background: linear-gradient(90deg, #EF4444 0%, #10B981 100%);
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  cursor: pointer;
+  box-shadow: ${({ $isDragging }) => $isDragging ? '0 0 12px rgba(239, 68, 68, 0.4)' : 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'};
+  transition: box-shadow 0.2s ease;
+`;
+
+const SliderThumb = styled.div<{ $value: number; $isDragging?: boolean }>`
+  position: absolute;
+  top: 50%;
+  left: ${({ $value }) => $value}%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  background: white;
+  border: 3px solid #ffffff;
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  cursor: grab;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: ${({ $isDragging }) => $isDragging ? 'none' : 'left 0.1s ease, transform 0.1s ease'};
+  z-index: 10;
+
+  &:hover {
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+
+  &:active {
+    cursor: grabbing;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
 `;
 
 const SectionTitle = styled.h3`
@@ -392,7 +373,7 @@ const psychometricCategories = [
     title: 'Personality',
     icon: '🧠',
     status: 'Completed',
-    gradient: 'linear-gradient(135deg, #EF4444 0%, #8B5CF6 100%)'
+    gradient: 'linear-gradient(135deg, #6B7280 0%, #9CA3AF 100%)'
   },
   {
     id: 'skills',
@@ -413,21 +394,21 @@ const psychometricCategories = [
     title: 'Values',
     icon: '💎',
     status: 'Completed',
-    gradient: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)'
+    gradient: 'linear-gradient(135deg, #00E5CC 0%, #6B7280 100%)'
   },
   {
     id: 'interest',
     title: 'Interest',
     icon: '❤️',
     status: 'In Progress',
-    gradient: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)'
+    gradient: 'linear-gradient(135deg, #3B82F6 0%, #00BFFF 100%)'
   },
   {
     id: 'beliefs',
     title: 'Beliefs',
     icon: '✨',
     status: 'Not Started',
-    gradient: 'linear-gradient(135deg, #FBBF24 0%, #F472B6 100%)'
+    gradient: 'linear-gradient(135deg, #FBBF24 0%, #9CA3AF 100%)'
   },
 ];
 
@@ -438,6 +419,9 @@ export default function ProfilePage() {
   const [committedCareer, setCommittedCareer] = useState<any>(null);
   const [careerDetails, setCareerDetails] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [sliderValue, setSliderValue] = useState(50);
+  const [isDragging, setIsDragging] = useState(false);
+  const [movingFromText, setMovingFromText] = useState('My Toxic Work Environment');
 
   useEffect(() => {
     if (!session?.user) {
@@ -496,14 +480,48 @@ export default function ProfilePage() {
     return 'Completed';
   };
 
+  const sliderRef = React.useRef<HTMLDivElement>(null);
+
+  const handleSliderMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    setIsDragging(true);
+    updateSliderValue(e.clientX);
+  };
+
+  const handleSliderMouseMove = (e: MouseEvent) => {
+    if (isDragging) {
+      updateSliderValue(e.clientX);
+    }
+  };
+
+  const handleSliderMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const updateSliderValue = (clientX: number) => {
+    if (sliderRef.current) {
+      const rect = sliderRef.current.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const percentage = Math.max(0, Math.min(100, (x / rect.width) * 100));
+      setSliderValue(percentage);
+    }
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleSliderMouseMove);
+      window.addEventListener('mouseup', handleSliderMouseUp);
+      return () => {
+        window.removeEventListener('mousemove', handleSliderMouseMove);
+        window.removeEventListener('mouseup', handleSliderMouseUp);
+      };
+    }
+  }, [isDragging]);
+
   if (loading) {
     return (
       <PageContainer>
         <Header>
-          <Logo>
-            <LogoIcon>pf</LogoIcon>
-            <LogoText>pathfinder</LogoText>
-          </Logo>
+          <Logo />
         </Header>
         <ContentArea>
           <ProfileSection>
@@ -519,10 +537,7 @@ export default function ProfilePage() {
     return (
       <PageContainer>
         <Header>
-          <Logo>
-            <LogoIcon>pf</LogoIcon>
-            <LogoText>pathfinder</LogoText>
-          </Logo>
+          <Logo />
         </Header>
         <ContentArea>
           <ProfileSection>
@@ -537,10 +552,7 @@ export default function ProfilePage() {
   return (
     <PageContainer>
       <Header>
-        <Logo>
-          <LogoIcon>pf</LogoIcon>
-          <LogoText>pathfinder</LogoText>
-        </Logo>
+        <Logo />
         <SettingsButton onClick={() => window.location.href = '/api/auth/signout'}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -556,79 +568,31 @@ export default function ProfilePage() {
             {profileData.bio ||
              (profileData.stats.totalMatches > 0
                ? `Exploring ${profileData.stats.totalMatches} career matches`
-               : 'Start chatting with AI Pathfinder to discover your ideal career')}
+               : '')}
           </UserBio>
         </ProfileSection>
 
         <ProgressSliderSection>
-          <SliderTitle>Your Career Journey</SliderTitle>
+          <SliderLabels>
+            <SliderLabel>Moving away from...</SliderLabel>
+            <SliderLabel>Moving towards...</SliderLabel>
+          </SliderLabels>
+          <MovingFromInput
+            type="text"
+            value={movingFromText}
+            onChange={(e) => setMovingFromText(e.target.value)}
+            placeholder="What are you moving away from?"
+          />
           <SliderContainer>
-            <SliderTrack>
-              <SliderFill $value={profileData.progressScore} />
-              <SliderThumb $value={profileData.progressScore} />
+            <SliderTrack
+              ref={sliderRef}
+              $isDragging={isDragging}
+              onMouseDown={handleSliderMouseDown}
+            >
+              <SliderThumb $value={sliderValue} $isDragging={isDragging} />
             </SliderTrack>
-            <SliderLabels>
-              <SliderLabel>Moving away from</SliderLabel>
-              <SliderLabel>Moving towards</SliderLabel>
-            </SliderLabels>
           </SliderContainer>
         </ProgressSliderSection>
-
-        <SectionTitle>Career Highlights</SectionTitle>
-        <HighlightsGrid>
-          <HighlightCard>
-            <HighlightValue>{profileData.stats.totalMatches}</HighlightValue>
-            <HighlightLabel>Career Matches</HighlightLabel>
-          </HighlightCard>
-          <HighlightCard>
-            <HighlightValue>{profileData.stats.careersExploring}</HighlightValue>
-            <HighlightLabel>Trying Now</HighlightLabel>
-          </HighlightCard>
-          <HighlightCard>
-            <HighlightValue>{profileData.stats.hasCommittedCareer ? 1 : 0}</HighlightValue>
-            <HighlightLabel>Committed</HighlightLabel>
-          </HighlightCard>
-          <HighlightCard>
-            <HighlightValue>{profileData.stats.totalBookmarks}</HighlightValue>
-            <HighlightLabel>Bookmarked</HighlightLabel>
-          </HighlightCard>
-        </HighlightsGrid>
-
-        {committedCareer && careerDetails && committedCareer.actionSteps && (
-          <ActionPlanSection>
-            <ActionPlanHeader>
-              <ActionPlanTitle>Your Action Plan</ActionPlanTitle>
-              <ViewAllButton onClick={() => router.push('/action-plan')}>
-                View All Steps
-              </ViewAllButton>
-            </ActionPlanHeader>
-            <CommittedCareerCard>
-              <CareerName>{careerDetails.title}</CareerName>
-              <ProgressBarContainer>
-                <ProgressBarFill
-                  $progress={
-                    committedCareer.actionSteps.steps
-                      ? Math.round((committedCareer.actionSteps.steps.filter((s: any) => s.completed).length / committedCareer.actionSteps.steps.length) * 100)
-                      : 0
-                  }
-                />
-              </ProgressBarContainer>
-              <ProgressText>
-                {committedCareer.actionSteps.steps
-                  ? `${committedCareer.actionSteps.steps.filter((s: any) => s.completed).length} of ${committedCareer.actionSteps.steps.length} steps completed`
-                  : 'Action plan generating...'}
-              </ProgressText>
-            </CommittedCareerCard>
-            {committedCareer.actionSteps.steps && committedCareer.actionSteps.steps.length > 0 && (
-              <NextStepCard>
-                <NextStepLabel>Next Step</NextStepLabel>
-                <NextStepTitle>
-                  {committedCareer.actionSteps.steps.find((s: any) => !s.completed)?.title || 'All steps completed! 🎉'}
-                </NextStepTitle>
-              </NextStepCard>
-            )}
-          </ActionPlanSection>
-        )}
 
         <SectionTitle>Self-Awareness Profile</SectionTitle>
         <PsychometricGrid>
@@ -638,7 +602,7 @@ export default function ProfilePage() {
               title: 'Personality',
               icon: '🧠',
               status: getPsychometricStatus(profileData.personality, 'personality'),
-              gradient: 'linear-gradient(135deg, #EF4444 0%, #8B5CF6 100%)',
+              gradient: 'linear-gradient(135deg, #6B7280 0%, #9CA3AF 100%)',
               data: profileData.personality,
             },
             {
@@ -662,7 +626,7 @@ export default function ProfilePage() {
               title: 'Values',
               icon: '💎',
               status: getPsychometricStatus(profileData.values, 'values'),
-              gradient: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
+              gradient: 'linear-gradient(135deg, #00E5CC 0%, #6B7280 100%)',
               data: profileData.values,
             },
             {
@@ -670,7 +634,7 @@ export default function ProfilePage() {
               title: 'Interests',
               icon: '❤️',
               status: getPsychometricStatus(profileData.interests, 'interests'),
-              gradient: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',
+              gradient: 'linear-gradient(135deg, #3B82F6 0%, #00BFFF 100%)',
               data: profileData.interests,
             },
             {
@@ -678,7 +642,7 @@ export default function ProfilePage() {
               title: 'Experience',
               icon: '💼',
               status: getPsychometricStatus(profileData.workExperience, 'experience'),
-              gradient: 'linear-gradient(135deg, #FBBF24 0%, #F472B6 100%)',
+              gradient: 'linear-gradient(135deg, #FBBF24 0%, #9CA3AF 100%)',
               data: profileData.workExperience,
             },
           ].map((category) => (

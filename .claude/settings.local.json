@@ -34,7 +34,21 @@
       "Bash(grep \"HTTP\" curl -s \"http://localhost:3000/chat\" -I)",
       "Bash(grep \"HTTP\" curl -s \"http://localhost:3000/careers\" -I)",
       "Bash(grep \"HTTP\" curl -s \"http://localhost:3000/jobs\" -I)",
-      "Bash(grep \"HTTP\" curl -s \"http://localhost:3000/api/careers\" -I)"
+      "Bash(grep \"HTTP\" curl -s \"http://localhost:3000/api/careers\" -I)",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/resources/derivatives/4/**)",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/resources/derivatives/B/**)",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/resources/derivatives/7/**)",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/resources/derivatives/9/**)",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/originals/F/**)",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/resources/renders/4/**)",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/resources/derivatives/masters/A/**)",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/resources/derivatives/masters/D/**)",
+      "mcp__ide__getDiagnostics",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/resources/renders/A/**)",
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/resources/derivatives/masters/C/**)",
+      "Bash(pkill:*)",
+      "Bash(rm \"/Users/dylanbryan/Documents/aipathfinder/.env 2\")",
+      "Bash(lsof -ti:3000)"
     ],
     "deny": [],
     "ask": []

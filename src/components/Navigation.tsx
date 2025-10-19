@@ -46,19 +46,20 @@ const NavIcon = styled.div<{ $active: boolean }>`
   svg {
     width: 100%;
     height: 100%;
-    fill: currentColor;
-    stroke: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
   }
 `;
 
 const CenterButton = styled.div<{ $active: boolean }>`
-  width: 64px;
-  height: 64px;
+  width: 40px;
+  height: 40px;
   border-radius: ${({ theme }) => theme.borderRadius.full};
-  background: ${({ $active, theme }) =>
+  background: ${({ $active }) =>
     $active
-      ? `radial-gradient(circle, ${theme.colors.primary.green} 0%, ${theme.colors.primary.blue} 100%)`
-      : '#E5E7EB'};
+      ? `radial-gradient(circle, #7CFC00 0%, #00E5CC 50%, #00BFFF 100%)`
+      : 'linear-gradient(135deg, #00E5CC 0%, #00BFFF 100%)'};
   display: flex;
   align-items: center;
   justify-content: center;
@@ -66,42 +67,42 @@ const CenterButton = styled.div<{ $active: boolean }>`
   cursor: pointer;
   transition: ${({ theme }) => theme.transitions.normal};
 
-  ${({ $active, theme }) =>
+  ${({ $active }) =>
     $active &&
     `
     box-shadow:
-      0 0 40px rgba(124, 252, 0, 0.8),
-      0 0 60px rgba(0, 229, 204, 0.6),
-      0 0 80px rgba(0, 191, 255, 0.4);
+      0 0 25px rgba(124, 252, 0, 0.6),
+      0 0 40px rgba(0, 229, 204, 0.4),
+      0 0 55px rgba(0, 191, 255, 0.3);
     animation: pulse 2s ease-in-out infinite;
   `}
 
   @keyframes pulse {
     0%, 100% {
       box-shadow:
-        0 0 40px rgba(124, 252, 0, 0.8),
-        0 0 60px rgba(0, 229, 204, 0.6),
-        0 0 80px rgba(0, 191, 255, 0.4);
+        0 0 25px rgba(124, 252, 0, 0.6),
+        0 0 40px rgba(0, 229, 204, 0.4),
+        0 0 55px rgba(0, 191, 255, 0.3);
     }
     50% {
       box-shadow:
-        0 0 50px rgba(124, 252, 0, 1),
-        0 0 70px rgba(0, 229, 204, 0.8),
-        0 0 100px rgba(0, 191, 255, 0.6);
+        0 0 35px rgba(124, 252, 0, 0.8),
+        0 0 50px rgba(0, 229, 204, 0.6),
+        0 0 70px rgba(0, 191, 255, 0.4);
     }
   }
 
   &:hover {
-    transform: scale(1.08);
+    transform: scale(1.05);
   }
 `;
 
 const CenterButtonInner = styled.div`
-  width: 16px;
-  height: 16px;
+  width: 10px;
+  height: 10px;
   background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.9) 40%, rgba(255, 255, 255, 0) 100%);
   border-radius: 50%;
-  filter: blur(1px);
+  filter: blur(0.8px);
 `;
 
 export function Navigation() {
@@ -114,8 +115,8 @@ export function Navigation() {
       {/* Home Icon */}
       <NavItem href="/" $active={isActive('/')}>
         <NavIcon $active={isActive('/')}>
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 13h1v7c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2v-7h1a1 1 0 0 0 .707-1.707l-9-9a.999.999 0 0 0-1.414 0l-9 9A1 1 0 0 0 3 13zm7 7v-5h4v5h-4zm2-15.586 6 6V15l.001 5H16v-5c0-1.103-.897-2-2-2h-4c-1.103 0-2 .897-2 2v5H6v-9.586l6-6z"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
         </NavIcon>
       </NavItem>
@@ -128,8 +129,8 @@ export function Navigation() {
       {/* Jobs/Briefcase Icon */}
       <NavItem href="/jobs" $active={isActive('/jobs')}>
         <NavIcon $active={isActive('/jobs')}>
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M20 6h-3V4c0-1.103-.897-2-2-2H9c-1.103 0-2 .897-2 2v2H4c-1.103 0-2 .897-2 2v11c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2V8c0-1.103-.897-2-2-2zM9 4h6v2H9V4zm5 10h-4v-2h4v2z"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />
           </svg>
         </NavIcon>
       </NavItem>
@@ -137,8 +138,8 @@ export function Navigation() {
       {/* Profile Icon */}
       <NavItem href="/profile" $active={isActive('/profile')}>
         <NavIcon $active={isActive('/profile')}>
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 2C6.579 2 2 6.579 2 12s4.579 10 10 10 10-4.579 10-10S17.421 2 12 2zm0 5c1.727 0 3 1.272 3 3s-1.273 3-3 3c-1.726 0-3-1.272-3-3s1.274-3 3-3zm-5.106 9.772c.897-1.32 2.393-2.2 4.106-2.2h2c1.714 0 3.209.88 4.106 2.2C15.828 18.14 14.015 19 12 19s-3.828-.86-5.106-2.228z"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
           </svg>
         </NavIcon>
       </NavItem>

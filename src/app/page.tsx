@@ -5,10 +5,11 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import styled from 'styled-components';
 import { Navigation } from '@/components/Navigation';
+import { Logo } from '@/components/Logo';
 
 const Container = styled.div`
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: ${({ theme }) => theme.colors.background.primary};
   padding-bottom: 80px;
 `;
 
@@ -23,22 +24,20 @@ const Header = styled.div`
   border-radius: 20px;
   padding: 2rem;
   margin-bottom: 2rem;
-  text-align: center;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 `;
 
-const Title = styled.h1`
-  font-size: 2.5rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 0.5rem;
+const LogoWrapper = styled.div`
+  margin-bottom: 1.5rem;
 `;
 
 const Subtitle = styled.p`
   font-size: 1.125rem;
   color: #4a5568;
+  text-align: center;
 `;
 
 const CommittedCareerSection = styled.div`
@@ -57,10 +56,10 @@ const SectionTitle = styled.h2`
 `;
 
 const CareerCard = styled.div`
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  background: ${({ theme }) => theme.colors.background.card};
   border-radius: 16px;
   padding: 2rem;
-  border-left: 5px solid #667eea;
+  border-left: 5px solid ${({ theme }) => theme.colors.primary.blue};
   cursor: pointer;
   transition: transform 0.2s;
 
@@ -108,7 +107,7 @@ const ProgressBar = styled.div`
 const ProgressFill = styled.div<{ $progress: number }>`
   width: ${props => props.$progress}%;
   height: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: ${({ theme }) => theme.colors.primary.gradient};
   transition: width 0.5s ease;
 `;
 
@@ -119,7 +118,7 @@ const ProgressText = styled.div`
 `;
 
 const ViewPlanButton = styled.button`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: ${({ theme }) => theme.colors.button.commit};
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -133,45 +132,6 @@ const ViewPlanButton = styled.button`
   &:hover {
     transform: translateY(-2px);
   }
-`;
-
-const QuickLinksGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-`;
-
-const QuickLinkCard = styled.div`
-  background: white;
-  border-radius: 16px;
-  padding: 1.5rem;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  }
-`;
-
-const QuickLinkIcon = styled.div`
-  font-size: 3rem;
-  margin-bottom: 1rem;
-`;
-
-const QuickLinkTitle = styled.h3`
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #1a202c;
-  margin-bottom: 0.5rem;
-`;
-
-const QuickLinkDescription = styled.p`
-  font-size: 0.875rem;
-  color: #718096;
-  line-height: 1.5;
 `;
 
 const EmptyState = styled.div`
@@ -202,7 +162,7 @@ const EmptyStateText = styled.p`
 `;
 
 const ExploreButton = styled.button`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: ${({ theme }) => theme.colors.button.commit};
   color: white;
   border: none;
   padding: 1rem 2rem;
@@ -220,16 +180,16 @@ const ExploreButton = styled.button`
 const Loading = styled.div`
   text-align: center;
   padding: 4rem 2rem;
-  color: white;
+  color: ${({ theme }) => theme.colors.text.secondary};
   font-size: 1.25rem;
 `;
 
 const QuickActionSection = styled.div`
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  background: ${({ theme }) => theme.colors.background.card};
   border-radius: 16px;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  border: 2px solid #667eea;
+  border: 2px solid ${({ theme }) => theme.colors.primary.blue};
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -253,7 +213,7 @@ const QuickActionSubtitle = styled.p`
 `;
 
 const QuickActionButton = styled.button`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: ${({ theme }) => theme.colors.button.commit};
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -371,7 +331,9 @@ export default function HomePage() {
     <Container>
       <Content>
         <Header>
-          <Title>AI Pathfinder</Title>
+          <LogoWrapper>
+            <Logo />
+          </LogoWrapper>
           <Subtitle>
             {session?.user
               ? `Welcome back, ${session.user.name?.split(' ')[0] || 'there'}!`
@@ -436,39 +398,6 @@ export default function HomePage() {
               </EmptyState>
             )}
 
-            <QuickLinksGrid>
-              <QuickLinkCard onClick={() => router.push('/chat')}>
-                <QuickLinkIcon>💬</QuickLinkIcon>
-                <QuickLinkTitle>Chat with AI</QuickLinkTitle>
-                <QuickLinkDescription>
-                  Get personalized career advice
-                </QuickLinkDescription>
-              </QuickLinkCard>
-
-              <QuickLinkCard onClick={() => router.push('/careers')}>
-                <QuickLinkIcon>🎯</QuickLinkIcon>
-                <QuickLinkTitle>Browse Careers</QuickLinkTitle>
-                <QuickLinkDescription>
-                  Explore career opportunities
-                </QuickLinkDescription>
-              </QuickLinkCard>
-
-              <QuickLinkCard onClick={() => router.push('/jobs')}>
-                <QuickLinkIcon>💼</QuickLinkIcon>
-                <QuickLinkTitle>Find Jobs</QuickLinkTitle>
-                <QuickLinkDescription>
-                  Search job listings
-                </QuickLinkDescription>
-              </QuickLinkCard>
-
-              <QuickLinkCard onClick={() => router.push('/profile')}>
-                <QuickLinkIcon>👤</QuickLinkIcon>
-                <QuickLinkTitle>My Profile</QuickLinkTitle>
-                <QuickLinkDescription>
-                  View your progress
-                </QuickLinkDescription>
-              </QuickLinkCard>
-            </QuickLinksGrid>
           </>
         ) : (
           <EmptyState>

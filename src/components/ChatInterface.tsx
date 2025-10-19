@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import styled from 'styled-components';
+import { VoiceChat } from './VoiceChat';
 
 const Container = styled.div`
   display: flex;
@@ -24,20 +25,63 @@ const Header = styled.div`
 const Logo = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+`;
+
+const LogoCircle = styled.div`
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #38b6ff 0%, #5ecee6 50%, #40b6ff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.5rem;
+  font-family: 'Comfortaa', cursive;
+  letter-spacing: -1px;
+
+  /* Text with gradient and white stroke */
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-image: linear-gradient(135deg, #38b6ff 0%, #5ecee6 50%, #7CFC00 100%);
+
+  /* White outline effect */
+  text-shadow:
+    -1px -1px 0 #fff,
+    1px -1px 0 #fff,
+    -1px 1px 0 #fff,
+    1px 1px 0 #fff,
+    -2px 0 0 #fff,
+    2px 0 0 #fff,
+    0 -2px 0 #fff,
+    0 2px 0 #fff;
 `;
 
 const LogoText = styled.h1`
-  font-family: 'Quicksand', -apple-system, sans-serif;
-  font-size: 2rem;
-  font-weight: 600;
-  background: ${({ theme }) => theme.colors.primary.gradient};
+  font-family: 'Comfortaa', cursive;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  background: linear-gradient(90deg, #38b6ff 0%, #5ecee6 33%, #40b6ff 66%, #7CFC00 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin: 0;
-  text-transform: lowercase;
-  letter-spacing: -0.5px;
+
+  /* White outline effect */
+  position: relative;
+
+  &::before {
+    content: attr(data-text);
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: -1;
+    background: none;
+    -webkit-text-fill-color: #fff;
+    -webkit-text-stroke: 3px #fff;
+  }
 `;
 
 const HeaderIcons = styled.div`
@@ -77,9 +121,9 @@ const MessageBubble = styled.div<{ $isAi: boolean }>`
   padding: 1rem 1.25rem;
   border-radius: ${({ theme }) => theme.borderRadius.xl};
   background: ${({ $isAi, theme }) =>
-    $isAi ? theme.colors.background.secondary : theme.colors.primary.green};
+    $isAi ? theme.colors.background.secondary : '#007AFF'};
   color: ${({ $isAi, theme }) =>
-    $isAi ? theme.colors.text.primary : theme.colors.text.primary};
+    $isAi ? theme.colors.text.primary : '#FFFFFF'};
   align-self: ${({ $isAi }) => ($isAi ? 'flex-start' : 'flex-end')};
   box-shadow: ${({ theme }) => theme.shadows.card};
   font-size: ${({ theme }) => theme.typography.fontSize.base};
@@ -298,8 +342,8 @@ export function ChatInterface() {
             content: msg.content,
             isAi: msg.role === 'assistant',
           }));
-          // Append loaded messages after the welcome messages
-          setMessages(prev => [...prev, ...loadedMessages]);
+          // Replace welcome messages with loaded history
+          setMessages(loadedMessages);
         }
       }
     } catch (error) {
@@ -463,7 +507,8 @@ export function ChatInterface() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </IconButton>
-          <LogoText>ai-pathfinder</LogoText>
+          <LogoCircle>pf</LogoCircle>
+          <LogoText data-text="ai-pathfinder">ai-pathfinder</LogoText>
         </Logo>
         <HeaderIcons>
           <IconButton onClick={handleNewChat} title="Start new chat">
@@ -555,6 +600,7 @@ export function ChatInterface() {
           <VoiceButton
             $active={isVoiceMode}
             onClick={() => setIsVoiceMode(!isVoiceMode)}
+            title="Voice chat"
           >
             {/* Voice/Audio Icon */}
             <svg viewBox="0 0 24 24" fill="currentColor">
@@ -564,6 +610,8 @@ export function ChatInterface() {
           </VoiceButton>
         </InputRow>
       </InputContainer>
+
+      <VoiceChat isOpen={isVoiceMode} onClose={() => setIsVoiceMode(false)} />
     </Container>
   );
 }

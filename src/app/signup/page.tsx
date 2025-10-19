@@ -5,6 +5,7 @@ import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import styled from 'styled-components';
 import Link from 'next/link';
+import { Logo } from '@/components/Logo';
 
 const PageContainer = styled.div`
   min-height: 100vh;
@@ -24,22 +25,11 @@ const FormCard = styled.div`
   box-shadow: ${({ theme }) => theme.shadows.lg};
 `;
 
-const Logo = styled.div`
+const LogoContainer = styled.div`
   text-align: center;
   margin-bottom: 2rem;
-`;
-
-const LogoText = styled.h1`
-  font-family: 'Quicksand', -apple-system, sans-serif;
-  font-size: 2.5rem;
-  font-weight: 600;
-  background: ${({ theme }) => theme.colors.primary.gradient};
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0;
-  text-transform: lowercase;
-  letter-spacing: -0.5px;
+  display: flex;
+  justify-content: center;
 `;
 
 const Title = styled.h2`
@@ -224,9 +214,9 @@ export default function SignupPage() {
   return (
     <PageContainer>
       <FormCard>
-        <Logo>
-          <LogoText>ai-pathfinder</LogoText>
-        </Logo>
+        <LogoContainer>
+          <Logo />
+        </LogoContainer>
 
         <Title>Create your account</Title>
         <Subtitle>Start your career discovery journey today</Subtitle>

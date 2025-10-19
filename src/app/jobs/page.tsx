@@ -2,6 +2,7 @@
 
 import styled from 'styled-components';
 import { Navigation } from '@/components/Navigation';
+import { Logo } from '@/components/Logo';
 import { CareerCard } from '@/components/CareerCard';
 import { useState, useEffect } from 'react';
 
@@ -20,37 +21,6 @@ const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-`;
-
-const Logo = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-`;
-
-const LogoIcon = styled.div`
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: ${({ theme }) => theme.colors.primary.gradient};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: bold;
-  font-size: 1.25rem;
-`;
-
-const LogoText = styled.h1`
-  font-family: 'Quicksand', -apple-system, sans-serif;
-  font-size: 1.5rem;
-  font-weight: 600;
-  background: ${({ theme }) => theme.colors.primary.gradient};
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0;
-  text-transform: lowercase;
 `;
 
 const BookmarkButton = styled.button`
@@ -619,10 +589,7 @@ export default function JobsPage() {
   return (
     <PageContainer>
       <Header>
-        <Logo>
-          <LogoIcon>pf</LogoIcon>
-          <LogoText>pathfinder</LogoText>
-        </Logo>
+        <Logo />
         <BookmarkButton>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />

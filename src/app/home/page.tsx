@@ -2,6 +2,7 @@
 
 import styled from 'styled-components';
 import { Navigation } from '@/components/Navigation';
+import { Logo } from '@/components/Logo';
 import { useState } from 'react';
 
 const PageContainer = styled.div`
@@ -19,37 +20,6 @@ const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-`;
-
-const Logo = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-`;
-
-const LogoIcon = styled.div`
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: ${({ theme }) => theme.colors.primary.gradient};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: bold;
-  font-size: 1.25rem;
-`;
-
-const LogoText = styled.h1`
-  font-family: 'Quicksand', -apple-system, sans-serif;
-  font-size: 1.5rem;
-  font-weight: 600;
-  background: ${({ theme }) => theme.colors.primary.gradient};
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin: 0;
-  text-transform: lowercase;
 `;
 
 const HeaderIcons = styled.div`
@@ -366,10 +336,7 @@ export default function HomePage() {
   return (
     <PageContainer>
       <Header>
-        <Logo>
-          <LogoIcon>pf</LogoIcon>
-          <LogoText>pathfinder</LogoText>
-        </Logo>
+        <Logo />
         <HeaderIcons>
           <IconButton>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">

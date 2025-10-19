@@ -13,9 +13,9 @@ export const theme = {
     // Secondary Colors
     secondary: {
       lightBlue: '#00D9FF',
-      darkBlue: '#0052FF',
-      purple: '#8B5CF6',
+      cyan: '#00E5CC',
       teal: '#14B8A6',
+      grey: '#6B7280',
     },
 
     // UI Colors
@@ -36,9 +36,9 @@ export const theme = {
 
     // Button Colors
     button: {
-      try: '#5DD9FC',        // Light blue "Try" button
-      commit: '#0052FF',     // Dark blue "Commit" button
-      commitGradient: 'linear-gradient(90deg, #7FE7A8 0%, #4FA4FE 100%)',
+      try: '#5DD9FC',        // Light cyan "Try" button
+      commit: '#00BFFF',     // Blue "Commit" button
+      commitGradient: 'linear-gradient(90deg, #00E5CC 0%, #00BFFF 100%)',
     },
 
     // Status Colors
@@ -58,12 +58,12 @@ export const theme = {
 
     // Gradients for psychometric cards
     gradients: {
-      personality: 'linear-gradient(135deg, #EF4444 0%, #8B5CF6 100%)',  // Red to purple
+      personality: 'linear-gradient(135deg, #6B7280 0%, #9CA3AF 100%)',  // Grey to light grey
       skills: 'linear-gradient(135deg, #14B8A6 0%, #FBBF24 100%)',        // Teal to yellow
       goals: 'linear-gradient(135deg, #93C5FD 0%, #7FE7A8 100%)',         // Light blue to green
-      values: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',        // Purple to teal
-      interest: 'linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%)',      // Blue to purple
-      beliefs: 'linear-gradient(135deg, #FBBF24 0%, #F472B6 100%)',       // Yellow to pink
+      values: 'linear-gradient(135deg, #00E5CC 0%, #6B7280 100%)',        // Cyan to grey
+      interest: 'linear-gradient(135deg, #3B82F6 0%, #00BFFF 100%)',      // Blue to deep sky blue
+      beliefs: 'linear-gradient(135deg, #FBBF24 0%, #9CA3AF 100%)',       // Yellow to grey
     },
 
     // Voice Mode
