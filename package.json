@@ -13,9 +13,6 @@
     "jobs:cleanup": "ts-node scripts/cleanup-jobs.ts",
     "jobs:stats": "ts-node scripts/job-stats.ts"
   },
-  "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
-  },
   "keywords": [],
   "author": "",
   "license": "ISC",
