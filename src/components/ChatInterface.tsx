@@ -1245,7 +1245,7 @@ export function ChatInterface() {
         )}
 
         {session?.user && messages.length > 2 && !isRecording && (
-          <MatchButton onClick={handleMatchCareers} disabled={isMatching}>
+          <MatchButton onClick={() => handleMatchCareers()} disabled={isMatching}>
             {isMatching ? (
               <>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
