@@ -58,22 +58,26 @@ async function verifyMatches() {
 
     // Check user profile data
     console.log('📊 User Profile Data:\n');
-    console.log(`Interests: ${testUser.interestData?.length || 0} items`);
+    const interestCount = Array.isArray(testUser.interestData) ? testUser.interestData.length : 0;
+    console.log(`Interests: ${interestCount} items`);
     if (testUser.interestData && Array.isArray(testUser.interestData)) {
       console.log(`  ${testUser.interestData.join(', ')}`);
     }
 
-    console.log(`\nSkills: ${testUser.skillsData?.length || 0} items`);
+    const skillsCount = Array.isArray(testUser.skillsData) ? testUser.skillsData.length : 0;
+    console.log(`\nSkills: ${skillsCount} items`);
     if (testUser.skillsData && Array.isArray(testUser.skillsData)) {
       console.log(`  ${testUser.skillsData.join(', ')}`);
     }
 
-    console.log(`\nValues: ${testUser.valuesData?.length || 0} items`);
+    const valuesCount = Array.isArray(testUser.valuesData) ? testUser.valuesData.length : 0;
+    console.log(`\nValues: ${valuesCount} items`);
     if (testUser.valuesData && Array.isArray(testUser.valuesData)) {
       console.log(`  ${testUser.valuesData.join(', ')}`);
     }
 
-    console.log(`\nGoals: ${testUser.goalsData?.length || 0} items`);
+    const goalsCount = Array.isArray(testUser.goalsData) ? testUser.goalsData.length : 0;
+    console.log(`\nGoals: ${goalsCount} items`);
     if (testUser.goalsData && Array.isArray(testUser.goalsData)) {
       console.log(`  ${testUser.goalsData.join(', ')}`);
     }

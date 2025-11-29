@@ -1,8 +1,6 @@
 'use client';
 
 import styled from 'styled-components';
-import { useState } from 'react';
-import Link from 'next/link';
 
 const Card = styled.div`
   background: ${({ theme }) => theme.colors.background.card};
@@ -72,109 +70,6 @@ const MatchDescription = styled.p`
   margin-bottom: 1rem;
 `;
 
-const ExpandedSection = styled.div`
-  margin-top: 1.5rem;
-`;
-
-const SectionHeading = styled.h4`
-  font-size: ${({ theme }) => theme.typography.fontSize.lg};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  color: ${({ theme }) => theme.colors.text.primary};
-  text-align: center;
-  margin: 1.5rem 0 1rem 0;
-`;
-
-const MatchButtonsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
-`;
-
-const MatchButton = styled.button`
-  background: #E5E7EB;
-  border: 2px solid #E5E7EB;
-  border-radius: ${({ theme }) => theme.borderRadius.full};
-  padding: 0.875rem 1rem;
-  font-size: ${({ theme }) => theme.typography.fontSize.base};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
-  color: ${({ theme }) => theme.colors.text.primary};
-  cursor: pointer;
-  transition: ${({ theme }) => theme.transitions.fast};
-
-  &:hover {
-    border-color: ${({ theme }) => theme.colors.primary.blue};
-    background: white;
-  }
-`;
-
-const DayInLifeCard = styled.div`
-  background: #F5F5F7;
-  border-radius: ${({ theme }) => theme.borderRadius.xl};
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-`;
-
-const DayInLifeTitle = styled.h4`
-  font-size: ${({ theme }) => theme.typography.fontSize.xl};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-  color: ${({ theme }) => theme.colors.text.primary};
-  text-align: center;
-  margin: 0 0 0.5rem 0;
-`;
-
-const DayInLifeSubtitle = styled.p`
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  color: ${({ theme }) => theme.colors.text.secondary};
-  text-align: center;
-  margin: 0 0 1rem 0;
-`;
-
-const DayInLifeList = styled.ul`
-  list-style: disc;
-  padding-left: 1.5rem;
-  margin: 0;
-
-  li {
-    font-size: ${({ theme }) => theme.typography.fontSize.base};
-    color: ${({ theme }) => theme.colors.text.primary};
-    line-height: ${({ theme }) => theme.typography.lineHeight.relaxed};
-    margin-bottom: 0.75rem;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-`;
-
-const SalaryChart = styled.div`
-  background: #F5F5F7;
-  border-radius: ${({ theme }) => theme.borderRadius.xl};
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
-`;
-
-const ChartContainer = styled.div`
-  position: relative;
-  height: 200px;
-  margin-bottom: 1rem;
-`;
-
-const ChartSVG = styled.svg`
-  width: 100%;
-  height: 100%;
-`;
-
-const ChartNote = styled.p`
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  color: ${({ theme }) => theme.colors.text.secondary};
-  margin: 0.5rem 0 0 0;
-
-  strong {
-    color: ${({ theme }) => theme.colors.text.primary};
-  }
-`;
-
 const CareerMeta = styled.div`
   display: flex;
   gap: 1.5rem;
@@ -197,7 +92,7 @@ const MetaLabel = styled.span`
 const ButtonContainer = styled.div`
   display: flex;
   gap: 1rem;
-  margin-top: 1rem;
+  margin: 1rem 0;
 `;
 
 const Button = styled.button<{ $variant: 'try' | 'commit' | 'added' | 'committed' }>`
@@ -265,10 +160,10 @@ const ReadMoreButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.25rem;
+  gap: 0.5rem;
   transition: ${({ theme }) => theme.transitions.fast};
   width: 100%;
-  margin: 0.5rem 0;
+  margin: 0;
 
   &:hover {
     opacity: 0.8;
@@ -304,8 +199,6 @@ export function CareerCard({
   isTried = false,
   isCommitted = false,
 }: CareerCardProps) {
-  const [showFullDescription, setShowFullDescription] = useState(false);
-
   const truncateText = (text: string, maxLength: number) => {
     if (text.length <= maxLength) return text;
     return text.slice(0, maxLength) + '...';
@@ -320,11 +213,16 @@ export function CareerCard({
     window.location.href = `/careers/${id}`;
   };
 
+  const handleReadMoreClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.location.href = `/careers/${id}`;
+  };
+
   return (
     <Card onClick={handleCardClick}>
       <CardHeader>
         <MatchBadge $percentage={matchPercentage}>{matchPercentage}% match</MatchBadge>
-        <BookmarkButton onClick={onBookmark}>
+        <BookmarkButton onClick={(e) => { e.stopPropagation(); onBookmark?.(); }}>
           <svg viewBox="0 0 24 24" fill={isBookmarked ? 'currentColor' : 'none'} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
           </svg>
@@ -335,7 +233,7 @@ export function CareerCard({
 
       <MatchDescription>
         <strong>The Match:</strong>{' '}
-        {showFullDescription ? matchDescription : truncateText(matchDescription, 100)}
+        {truncateText(matchDescription, 100)}
       </MatchDescription>
 
       {(salary || requirements) && (
@@ -355,74 +253,10 @@ export function CareerCard({
         </CareerMeta>
       )}
 
-      {showFullDescription && (
-        <ExpandedSection>
-          <SectionHeading>See how you match in these different areas</SectionHeading>
-          <MatchButtonsGrid>
-            <MatchButton>Interest</MatchButton>
-            <MatchButton>Goals</MatchButton>
-            <MatchButton>Skills</MatchButton>
-            <MatchButton>Location</MatchButton>
-            <MatchButton>Personality</MatchButton>
-            <MatchButton>Values</MatchButton>
-          </MatchButtonsGrid>
-
-          <DayInLifeCard>
-            <DayInLifeTitle>A day in the life</DayInLifeTitle>
-            <DayInLifeSubtitle>Here's what a day in the life can look like as a youth development leader</DayInLifeSubtitle>
-            <DayInLifeList>
-              <li>Design and lead programs that help young people build leadership, teamwork, and life skills.</li>
-              <li>Mentor and coach youth one-on-one or in small groups to set goals and overcome challenges.</li>
-              <li>Organize events and projects like workshops, volunteer days, and community initiatives.</li>
-            </DayInLifeList>
-          </DayInLifeCard>
-
-          <SalaryChart>
-            <ChartContainer>
-              <ChartSVG viewBox="0 0 400 200" preserveAspectRatio="none">
-                {/* Bell curve path */}
-                <path
-                  d="M 20,180 Q 80,120 120,80 Q 160,50 200,40 Q 240,50 280,80 Q 320,120 380,180"
-                  stroke="#00BFFF"
-                  strokeWidth="3"
-                  fill="none"
-                />
-                {/* Data points */}
-                <circle cx="80" cy="120" r="6" fill="#00BFFF" />
-                <circle cx="120" cy="80" r="6" fill="#00BFFF" />
-                <circle cx="200" cy="40" r="6" fill="#00BFFF" />
-                <circle cx="280" cy="80" r="6" fill="#00BFFF" />
-                <circle cx="320" cy="120" r="6" fill="#00BFFF" />
-                {/* Vertical line at median */}
-                <line x1="200" y1="40" x2="200" y2="180" stroke="#00BFFF" strokeWidth="2" />
-                {/* Labels */}
-                <text x="80" y="195" fontSize="12" textAnchor="middle" fill="#6B7280">30-</text>
-                <text x="120" y="195" fontSize="12" textAnchor="middle" fill="#6B7280">40</text>
-                <text x="200" y="195" fontSize="12" textAnchor="middle" fill="#6B7280">50</text>
-                <text x="280" y="195" fontSize="12" textAnchor="middle" fill="#6B7280">70</text>
-                <text x="320" y="195" fontSize="12" textAnchor="middle" fill="#6B7280">80</text>
-                <text x="360" y="195" fontSize="12" textAnchor="middle" fill="#6B7280">90+</text>
-              </ChartSVG>
-            </ChartContainer>
-            <ChartNote><strong>*In Thousands</strong></ChartNote>
-            <ChartNote><strong>*Click on the curve to explore what factors lead to that income level.</strong></ChartNote>
-          </SalaryChart>
-        </ExpandedSection>
-      )}
-
-      {matchDescription.length > 100 && (
-        <ReadMoreButton onClick={() => setShowFullDescription(!showFullDescription)}>
-          {showFullDescription ? 'Show less' : 'Read more'}
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d={showFullDescription ? "M2 8l4-4 4 4" : "M2 4l4 4 4-4"} stroke="currentColor" strokeWidth={2} strokeLinecap="round" />
-          </svg>
-        </ReadMoreButton>
-      )}
-
       <ButtonContainer>
         <Button
           $variant={isTried ? 'added' : 'try'}
-          onClick={onTry}
+          onClick={(e) => { e.stopPropagation(); onTry?.(); }}
         >
           {isTried ? (
             <>
@@ -438,7 +272,7 @@ export function CareerCard({
 
         <Button
           $variant={isCommitted ? 'committed' : 'commit'}
-          onClick={onCommit}
+          onClick={(e) => { e.stopPropagation(); onCommit?.(); }}
         >
           {isCommitted ? (
             <>
@@ -452,6 +286,13 @@ export function CareerCard({
           )}
         </Button>
       </ButtonContainer>
+
+      <ReadMoreButton onClick={handleReadMoreClick}>
+        Read more
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </ReadMoreButton>
     </Card>
   );
 }

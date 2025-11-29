@@ -13,7 +13,7 @@ const Modal = styled.div<{ $isOpen: boolean }>`
   background: rgba(0, 0, 0, 0.7);
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: ${({ theme }) => theme.zIndex.modal};
 `;
 
 const ModalContent = styled.div`
@@ -66,6 +66,18 @@ const VoiceSelector = styled.div`
   margin-bottom: 1.5rem;
 `;
 
+const SettingsGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+`;
+
+const SettingItem = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
 const Label = styled.label`
   display: block;
   font-size: ${({ theme }) => theme.typography.fontSize.sm};
@@ -89,6 +101,67 @@ const Select = styled.select`
     border-color: ${({ theme }) => theme.colors.primary.blue};
     box-shadow: 0 0 0 3px rgba(0, 191, 255, 0.1);
   }
+`;
+
+const Slider = styled.input`
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: #E5E7EB;
+  outline: none;
+  -webkit-appearance: none;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: ${({ theme }) => theme.colors.primary.blue};
+    cursor: pointer;
+    transition: ${({ theme }) => theme.transitions.fast};
+
+    &:hover {
+      transform: scale(1.2);
+    }
+  }
+
+  &::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: ${({ theme }) => theme.colors.primary.blue};
+    cursor: pointer;
+    border: none;
+    transition: ${({ theme }) => theme.transitions.fast};
+
+    &:hover {
+      transform: scale(1.2);
+    }
+  }
+`;
+
+const SliderValue = styled.span`
+  font-size: ${({ theme }) => theme.typography.fontSize.xs};
+  color: ${({ theme }) => theme.colors.text.secondary};
+  margin-top: 0.25rem;
+`;
+
+const Checkbox = styled.input`
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: ${({ theme }) => theme.colors.primary.blue};
+`;
+
+const CheckboxLabel = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  color: ${({ theme }) => theme.colors.text.primary};
+  cursor: pointer;
+  margin-bottom: 1rem;
 `;
 
 const VisualizationContainer = styled.div`
@@ -138,6 +211,42 @@ const StatusText = styled.div<{ $isActive: boolean }>`
   font-size: ${({ theme }) => theme.typography.fontSize.base};
   font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
   color: ${({ $isActive }) => ($isActive ? '#EF4444' : '#6B7280')};
+`;
+
+const AiSpeakingIndicator = styled.div`
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: white;
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  animation: pulse 2s ease-in-out infinite;
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  svg {
+    animation: soundWave 1s ease-in-out infinite;
+  }
+
+  @keyframes soundWave {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.2);
+    }
+  }
 `;
 
 const TranscriptionBox = styled.div`
@@ -246,32 +355,76 @@ interface VoiceChatProps {
 export function VoiceChat({ isOpen, onClose }: VoiceChatProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState('vespera');
+  const [speedAlpha, setSpeedAlpha] = useState(1.0);
+  const [reduceLatency, setReduceLatency] = useState(true);
+  const [modelId, setModelId] = useState('mist');
   const [transcript, setTranscript] = useState('');
   const [aiResponse, setAiResponse] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [audioUrl, setAudioUrl] = useState('');
+  const [isAiSpeaking, setIsAiSpeaking] = useState(false);
+  const [isInConversationMode, setIsInConversationMode] = useState(false);
+
+  console.log('VoiceChat rendered, isOpen:', isOpen);
 
   const roomRef = useRef<any>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const isAiSpeakingRef = useRef<boolean>(false);
+  const isInConversationModeRef = useRef<boolean>(false);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const isRecordingRef = useRef<boolean>(false);
 
   const availableVoices = [
-    { id: 'vespera', name: 'Vespera (Default)' },
-    { id: 'aurora', name: 'Aurora' },
-    { id: 'orion', name: 'Orion' },
-    { id: 'nova', name: 'Nova' },
+    { id: 'vespera', name: 'Vespera (Warm & Professional)', description: 'Balanced, friendly female voice' },
+    { id: 'aurora', name: 'Aurora (Energetic)', description: 'Bright, enthusiastic female voice' },
+    { id: 'orion', name: 'Orion (Deep & Calm)', description: 'Deep, authoritative male voice' },
+    { id: 'nova', name: 'Nova (Clear & Neutral)', description: 'Clear, neutral voice' },
   ];
+
+  const qualityModels = [
+    { id: 'mist', name: 'Mist (Fast)', description: 'Lower latency, good quality' },
+    { id: 'v1', name: 'V1 (High Quality)', description: 'Higher quality, slower generation' },
+  ];
+
+  const interruptAI = () => {
+    // Stop any currently playing audio
+    if (audioRef.current) {
+      console.log('🛑 User interrupted AI - stopping audio playback');
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
+      isAiSpeakingRef.current = false;
+      setIsAiSpeaking(false);
+    }
+  };
 
   const startRecording = async () => {
     try {
       setError(''); // Clear any previous errors
 
+      // Interrupt AI if speaking
+      interruptAI();
+
       // Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
 
       // Create MediaRecorder to capture audio
       const mediaRecorder = new MediaRecorder(stream);
       const audioChunks: Blob[] = [];
+
+      // Setup audio context for VAD (Voice Activity Detection)
+      const audioContext = new AudioContext();
+      audioContextRef.current = audioContext;
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyserRef.current = analyser;
+
+      analyser.fftSize = 2048;
+      source.connect(analyser);
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -299,6 +452,9 @@ export function VoiceChat({ isOpen, onClose }: VoiceChatProps) {
               body: JSON.stringify({
                 audio: base64Audio,
                 voice: selectedVoice,
+                speedAlpha: speedAlpha,
+                reduceLatency: reduceLatency,
+                modelId: modelId,
               }),
             });
 
@@ -308,35 +464,28 @@ export function VoiceChat({ isOpen, onClose }: VoiceChatProps) {
               setAiResponse(data.response);
               setAudioUrl(data.audioUrl);
 
-              // Try to play audio automatically
+              // Play audio and automatically start listening again if in conversation mode
               if (data.audioUrl) {
-                try {
-                  const audio = new Audio(data.audioUrl);
-                  audioRef.current = audio;
-                  await audio.play();
-                  console.log('Audio playback started successfully');
-                } catch (audioError: any) {
-                  console.error('Audio playback error:', audioError);
-                  // Browser blocked autoplay - user can click play button
-                  console.log('Autoplay blocked - user must click play button');
-                }
+                console.log('🔄 Playing AI response...');
+                await playAudioAndThenListen(data.audioUrl);
               } else {
                 console.warn('No audio URL received from server');
               }
             } else {
               const error = await response.json();
               setError(error.error || 'Failed to process voice');
+              setIsInConversationMode(false);
+              isInConversationModeRef.current = false;
             }
           } catch (error) {
             console.error('Error processing voice:', error);
             setError('Failed to process voice. Please try again.');
+            setIsInConversationMode(false);
+            isInConversationModeRef.current = false;
           } finally {
             setIsProcessing(false);
           }
         };
-
-        // Stop all tracks
-        stream.getTracks().forEach(track => track.stop());
       };
 
       // Start recording
@@ -344,6 +493,11 @@ export function VoiceChat({ isOpen, onClose }: VoiceChatProps) {
       roomRef.current = mediaRecorder as any;
 
       setIsRecording(true);
+      isRecordingRef.current = true;
+
+      // Start monitoring silence for auto-stop
+      console.log('🎙️ Recording started, starting VAD...');
+      monitorSilence();
     } catch (error: any) {
       console.error('Error starting recording:', error);
 
@@ -372,15 +526,169 @@ export function VoiceChat({ isOpen, onClose }: VoiceChatProps) {
       roomRef.current = null;
     }
 
+    // Stop media stream tracks
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+
+    // Close audio context
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+
     setIsRecording(false);
+    isRecordingRef.current = false;
+  };
+
+  const monitorSilence = () => {
+    if (!analyserRef.current) {
+      console.log('No analyser available for VAD');
+      return;
+    }
+
+    const analyser = analyserRef.current;
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    const SILENCE_THRESHOLD = 30; // Adjust for sensitivity
+    const SILENCE_DURATION = 800; // 0.8 seconds of silence (faster response)
+
+    let silenceStart: number | null = null;
+
+    const checkAudioLevel = () => {
+      // Check using ref instead of state
+      if (!isRecordingRef.current) {
+        console.log('VAD stopped - recording is false');
+        return;
+      }
+
+      analyser.getByteFrequencyData(dataArray);
+      const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+
+      console.log('Audio level:', average); // Debug log
+
+      if (average < SILENCE_THRESHOLD) {
+        if (silenceStart === null) {
+          silenceStart = Date.now();
+          console.log('Silence started');
+        } else if (Date.now() - silenceStart > SILENCE_DURATION) {
+          console.log('🔇 Silence detected for 0.8s - auto-stopping recording');
+          stopRecording();
+          return;
+        }
+      } else {
+        if (silenceStart !== null) {
+          console.log('Sound detected, resetting silence timer');
+        }
+        silenceStart = null;
+      }
+
+      requestAnimationFrame(checkAudioLevel);
+    };
+
+    console.log('Starting VAD monitoring');
+    checkAudioLevel();
   };
 
   const toggleRecording = () => {
-    if (isRecording) {
+    if (isRecording || isInConversationMode) {
+      // Stop conversation mode
+      console.log('🛑 Stopping conversation mode');
       stopRecording();
+      setIsInConversationMode(false);
+      isInConversationModeRef.current = false;
+      interruptAI(); // Also stop any playing audio
     } else {
+      // Start conversation mode
+      console.log('🎙️ Starting continuous conversation mode');
+      setIsInConversationMode(true);
+      isInConversationModeRef.current = true;
       startRecording();
     }
+  };
+
+  const playAudioAndThenListen = async (audioUrl: string) => {
+    return new Promise<void>((resolve) => {
+      try {
+        console.log('🔊 Playing AI response and will listen after...');
+
+        // Convert base64 to blob for better compatibility
+        const base64Data = audioUrl.split(',')[1];
+        const mimeType = audioUrl.match(/data:([^;]+);/)?.[1] || 'audio/wav';
+
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: mimeType });
+        const blobUrl = URL.createObjectURL(blob);
+
+        const audio = new Audio();
+        audio.src = blobUrl;
+        audio.volume = 1.0;
+        audioRef.current = audio;
+        isAiSpeakingRef.current = true;
+        setIsAiSpeaking(true);
+
+        audio.onloadedmetadata = () => {
+          console.log('Audio loaded, duration:', audio.duration, 'seconds');
+        };
+
+        audio.onended = async () => {
+          console.log('✅ AI finished speaking');
+          URL.revokeObjectURL(blobUrl);
+          isAiSpeakingRef.current = false;
+          setIsAiSpeaking(false);
+
+          // If in conversation mode, automatically start listening again
+          if (isInConversationModeRef.current) {
+            console.log('🎤 Auto-starting recording for next turn...');
+            await new Promise(r => setTimeout(r, 200)); // Brief pause (reduced for speed)
+            await startRecording();
+          }
+          resolve();
+        };
+
+        audio.onerror = async (e) => {
+          console.error('Audio playback error:', e);
+          URL.revokeObjectURL(blobUrl);
+          isAiSpeakingRef.current = false;
+          setIsAiSpeaking(false);
+
+          // Still continue listening even if playback failed
+          if (isInConversationModeRef.current) {
+            await startRecording();
+          }
+          resolve();
+        };
+
+        audio.onpause = () => {
+          isAiSpeakingRef.current = false;
+          setIsAiSpeaking(false);
+        };
+
+        // Play the audio
+        audio.play().catch(async (err) => {
+          console.error('Play failed:', err);
+          if (err.name === 'NotAllowedError') {
+            setError('Browser blocked audio. Please click play or allow audio.');
+          }
+          // Continue listening even if audio failed
+          if (isInConversationModeRef.current) {
+            await startRecording();
+          }
+          resolve();
+        });
+      } catch (error) {
+        console.error('Error in playAudioAndThenListen:', error);
+        if (isInConversationModeRef.current) {
+          startRecording();
+        }
+        resolve();
+      }
+    });
   };
 
   const playAudio = async () => {
@@ -420,35 +728,79 @@ export function VoiceChat({ isOpen, onClose }: VoiceChatProps) {
 
       const audio = new Audio();
       audio.src = blobUrl;
+      audio.volume = 1.0; // Ensure volume is at max
       audioRef.current = audio;
+      isAiSpeakingRef.current = true;
+      setIsAiSpeaking(true);
+
+      audio.onloadedmetadata = () => {
+        console.log('Manual play: Audio metadata loaded - duration:', audio.duration, 'seconds');
+      };
 
       audio.onended = () => {
-        console.log('Audio playback ended');
+        console.log('Manual play: Audio playback ended');
         URL.revokeObjectURL(blobUrl); // Clean up
+        isAiSpeakingRef.current = false;
+        setIsAiSpeaking(false);
       };
 
       audio.onerror = (e) => {
-        console.error('Audio element error:', e);
+        console.error('Manual play: Audio element error:', e);
+        console.error('Manual play: Audio error details:', audio.error);
+        if (audio.error) {
+          console.error('Manual play: Error code:', audio.error.code);
+          console.error('Manual play: Error message:', audio.error.message);
+        }
         setError('Audio format not supported by browser');
+        isAiSpeakingRef.current = false;
+        setIsAiSpeaking(false);
       };
 
-      console.log('Starting audio playback...');
+      audio.onplay = () => {
+        console.log('Manual play: Audio started playing');
+        isAiSpeakingRef.current = true;
+        setIsAiSpeaking(true);
+      };
+
+      audio.onpause = () => {
+        console.log('Manual play: Audio paused');
+        isAiSpeakingRef.current = false;
+        setIsAiSpeaking(false);
+      };
+
+      console.log('Manual play: Starting audio playback...');
       await audio.play();
-      console.log('Audio playing successfully');
+      console.log('Manual play: Audio playing successfully');
     } catch (error: any) {
       console.error('Error in playAudio:', error);
       setError(`Could not play audio: ${error.message || error.name}`);
     }
   };
 
-  // Cleanup on unmount
+  // Cleanup on unmount or when modal closes
   useEffect(() => {
+    if (!isOpen) {
+      // Clean up when modal closes
+      if (isRecording) {
+        stopRecording();
+      }
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+      setIsInConversationMode(false);
+      isInConversationModeRef.current = false;
+      setTranscript('');
+      setAiResponse('');
+      setError('');
+    }
+
     return () => {
       if (isRecording) {
         stopRecording();
       }
     };
-  }, []);
+  }, [isOpen]);
 
   return (
     <Modal $isOpen={isOpen}>
@@ -478,6 +830,63 @@ export function VoiceChat({ isOpen, onClose }: VoiceChatProps) {
           </Select>
         </VoiceSelector>
 
+        <SettingsGrid>
+          <SettingItem>
+            <Label htmlFor="speed-slider">
+              Speech Speed: {speedAlpha.toFixed(1)}x
+            </Label>
+            <Slider
+              id="speed-slider"
+              type="range"
+              min="0.5"
+              max="2.0"
+              step="0.1"
+              value={speedAlpha}
+              onChange={(e) => setSpeedAlpha(parseFloat(e.target.value))}
+              disabled={isRecording}
+            />
+            <SliderValue>
+              {speedAlpha < 0.8 ? 'Slower' : speedAlpha > 1.2 ? 'Faster' : 'Normal'}
+            </SliderValue>
+          </SettingItem>
+
+          <SettingItem>
+            <Label htmlFor="model-select">Quality</Label>
+            <Select
+              id="model-select"
+              value={modelId}
+              onChange={(e) => setModelId(e.target.value)}
+              disabled={isRecording}
+            >
+              {qualityModels.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.name}
+                </option>
+              ))}
+            </Select>
+            <SliderValue>{qualityModels.find(m => m.id === modelId)?.description}</SliderValue>
+          </SettingItem>
+        </SettingsGrid>
+
+        <CheckboxLabel>
+          <Checkbox
+            type="checkbox"
+            checked={reduceLatency}
+            onChange={(e) => setReduceLatency(e.target.checked)}
+            disabled={isRecording}
+          />
+          Reduce latency (faster response, may reduce quality slightly)
+        </CheckboxLabel>
+
+        {isAiSpeaking && !isRecording && (
+          <AiSpeakingIndicator>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+            </svg>
+            AI is speaking... (Click mic to interrupt)
+          </AiSpeakingIndicator>
+        )}
+
         {error && (
           <ErrorBox>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -502,7 +911,14 @@ export function VoiceChat({ isOpen, onClose }: VoiceChatProps) {
             )}
           </MicrophoneButton>
           <StatusText $isActive={isRecording}>
-            {isProcessing ? 'Processing...' : isRecording ? 'Listening...' : 'Tap to speak'}
+            {isProcessing
+              ? 'Processing...'
+              : isRecording
+                ? 'Listening...'
+                : isInConversationMode
+                  ? 'Continuous mode - Tap to stop'
+                  : 'Tap to start conversation'
+            }
           </StatusText>
         </VisualizationContainer>
 

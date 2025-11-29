@@ -37,45 +37,6 @@ const BookmarkButton = styled.button`
   }
 `;
 
-const TabContainer = styled.div`
-  display: flex;
-  background: ${({ theme }) => theme.colors.background.secondary};
-  padding: 0 1rem;
-  gap: 2rem;
-`;
-
-const Tab = styled.button<{ $active: boolean }>`
-  background: none;
-  border: none;
-  padding: 1rem 0;
-  font-size: ${({ theme }) => theme.typography.fontSize.lg};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  color: ${({ $active, theme }) =>
-    $active ? theme.colors.text.primary : theme.colors.text.secondary};
-  cursor: pointer;
-  position: relative;
-  transition: ${({ theme }) => theme.transitions.fast};
-
-  ${({ $active, theme }) =>
-    $active &&
-    `
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: ${theme.colors.primary.blue};
-      border-radius: 2px 2px 0 0;
-    }
-  `}
-
-  &:hover {
-    color: ${({ theme }) => theme.colors.text.primary};
-  }
-`;
-
 const ContentArea = styled.div`
   padding: 1rem;
 `;
@@ -100,7 +61,6 @@ const EmptyState = styled.div`
 
 export default function CareersPage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'recommended' | 'all'>('recommended');
   const [careers, setCareers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [triedCareers, setTriedCareers] = useState<Set<string>>(new Set());
@@ -345,52 +305,36 @@ export default function CareersPage() {
         </BookmarkButton>
       </Header>
 
-      <TabContainer>
-        <Tab $active={activeTab === 'recommended'} onClick={() => setActiveTab('recommended')}>
-          Recommended
-        </Tab>
-        <Tab $active={activeTab === 'all'} onClick={() => setActiveTab('all')}>
-          All Jobs
-        </Tab>
-      </TabContainer>
-
       <ContentArea>
         {loading ? (
           <EmptyState>
             <h3>Loading careers...</h3>
           </EmptyState>
-        ) : activeTab === 'recommended' ? (
-          careers.length > 0 ? (
-            careers.map((career) => (
-              <CareerCard
-                key={career.id}
-                id={career.id}
-                matchPercentage={career.matchPercentage}
-                title={career.title}
-                matchDescription={career.matchDescription}
-                salary={career.avgSalary}
-                requirements={career.requirements}
-                onTry={() => handleTry(career.id)}
-                onCommit={() => handleCommit(career.id)}
-                onBookmark={() => handleBookmark(career.id)}
-                isTried={triedCareers.has(career.id)}
-                isCommitted={committedCareer === career.id}
-                isBookmarked={bookmarkedCareers.has(career.id)}
-              />
-            ))
-          ) : (
-            <EmptyState>
-              <h3>No recommendations yet</h3>
-              <p>
-                Sorry no recommendations yet, have a conversation with ai pathfinder to get a
-                recommended list of careers.
-              </p>
-            </EmptyState>
-          )
+        ) : careers.length > 0 ? (
+          careers.map((career) => (
+            <CareerCard
+              key={career.id}
+              id={career.id}
+              matchPercentage={career.matchPercentage}
+              title={career.title}
+              matchDescription={career.matchDescription}
+              salary={career.avgSalary}
+              requirements={career.requirements}
+              onTry={() => handleTry(career.id)}
+              onCommit={() => handleCommit(career.id)}
+              onBookmark={() => handleBookmark(career.id)}
+              isTried={triedCareers.has(career.id)}
+              isCommitted={committedCareer === career.id}
+              isBookmarked={bookmarkedCareers.has(career.id)}
+            />
+          ))
         ) : (
           <EmptyState>
-            <h3>All Jobs</h3>
-            <p>Job listings coming soon...</p>
+            <h3>No recommendations yet</h3>
+            <p>
+              Sorry no recommendations yet, have a conversation with ai pathfinder to get a
+              recommended list of careers.
+            </p>
           </EmptyState>
         )}
       </ContentArea>

@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
+import { useSearchParams } from 'next/navigation';
 import styled from 'styled-components';
-import { VoiceChat } from './VoiceChat';
+import Image from 'next/image';
 
 const Container = styled.div`
   display: flex;
@@ -25,46 +26,24 @@ const Header = styled.div`
 const Logo = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1.5rem;
 `;
 
 const LogoCircle = styled.div`
-  width: 50px;
-  height: 50px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #38b6ff 0%, #5ecee6 50%, #40b6ff 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 1.5rem;
-  font-family: 'Comfortaa', cursive;
-  letter-spacing: -1px;
-
-  /* Text with gradient and white stroke */
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-image: linear-gradient(135deg, #38b6ff 0%, #5ecee6 50%, #7CFC00 100%);
-
-  /* White outline effect */
-  text-shadow:
-    -1px -1px 0 #fff,
-    1px -1px 0 #fff,
-    -1px 1px 0 #fff,
-    1px 1px 0 #fff,
-    -2px 0 0 #fff,
-    2px 0 0 #fff,
-    0 -2px 0 #fff,
-    0 2px 0 #fff;
+  position: relative;
+  overflow: hidden;
+  background: transparent;
 `;
 
 const LogoText = styled.h1`
   font-family: 'Comfortaa', cursive;
-  font-size: 1.5rem;
+  font-size: 2.5rem;
   font-weight: 700;
   margin: 0;
-  background: linear-gradient(90deg, #38b6ff 0%, #5ecee6 33%, #40b6ff 66%, #7CFC00 100%);
+  background: linear-gradient(90deg, #7CFC00 0%, #7CFC00 20%, #00CED1 40%, #4A90E2 70%, #5DD9FC 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -280,14 +259,57 @@ const ActionButton = styled.button`
 
 const VoiceButton = styled(ActionButton)<{ $active: boolean }>`
   background: ${({ $active, theme }) =>
-    $active ? theme.colors.voice.blob : theme.colors.text.primary};
+    $active ? '#EF4444' : theme.colors.text.primary};
   color: ${({ theme }) => theme.colors.text.white};
+  position: relative;
+
+  ${({ $active }) => $active && `
+    animation: pulse 1.5s ease-in-out infinite;
+  `}
+
+  @keyframes pulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+    50% {
+      box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    }
+  }
 
   &:hover {
     background: ${({ $active, theme }) =>
-      $active ? theme.colors.primary.blue : theme.colors.text.primary};
+      $active ? '#DC2626' : theme.colors.text.primary};
     transform: scale(1.05);
   }
+`;
+
+const VoiceIndicator = styled.div`
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+  border-radius: ${({ theme }) => theme.borderRadius.lg};
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: white;
+`;
+
+const VoiceDot = styled.span`
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: white;
+  animation: blink 1s infinite;
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+`;
+
+const VoiceText = styled.span`
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
 `;
 
 interface Message {
@@ -298,6 +320,10 @@ interface Message {
 
 export function ChatInterface() {
   const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const careerParam = searchParams?.get('career');
+  const isNewChat = searchParams?.get('new') === 'true';
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -311,18 +337,47 @@ export function ChatInterface() {
     },
   ]);
   const [inputValue, setInputValue] = useState('');
-  const [isVoiceMode, setIsVoiceMode] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isMatching, setIsMatching] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [isInVoiceConversation, setIsInVoiceConversation] = useState(false);
+  const [isAiSpeaking, setIsAiSpeaking] = useState(false);
   const chatAreaRef = useRef<HTMLDivElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const isInVoiceConversationRef = useRef(false);
+  const isAiSpeakingRef = useRef(false);
+  const isRecordingRef = useRef(false);
+  const persistentMicStreamRef = useRef<MediaStream | null>(null);
+  const interruptAnalyserRef = useRef<AnalyserNode | null>(null);
+  const interruptAudioContextRef = useRef<AudioContext | null>(null);
+
+  // Handle new chat from career page
+  useEffect(() => {
+    if (isNewChat && careerParam) {
+      // Start fresh conversation about specific career
+      setMessages([
+        {
+          id: '1',
+          content: `I see you're interested in learning more about ${careerParam}. What specific aspects would you like to explore? I can discuss day-to-day responsibilities, required skills, career growth, salary expectations, or anything else you'd like to know!`,
+          isAi: true,
+        },
+      ]);
+      setHistoryLoaded(true); // Prevent loading old history
+    }
+  }, [isNewChat, careerParam]);
 
   // Load chat history when user logs in
   useEffect(() => {
-    if (session?.user?.id && !historyLoaded) {
+    if (session?.user?.id && !historyLoaded && !isNewChat) {
       loadChatHistory();
     }
-  }, [session?.user?.id]);
+  }, [session?.user?.id, isNewChat]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -330,6 +385,25 @@ export function ChatInterface() {
       chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
     }
   }, [messages, isLoading]);
+
+  // Auto-update career matches every 4 messages (2 exchanges)
+  useEffect(() => {
+    // Only auto-update if:
+    // 1. User is signed in
+    // 2. We have more than 4 messages (at least 2 exchanges)
+    // 3. Message count is divisible by 4 (every 2 exchanges)
+    // 4. Not currently matching
+    if (
+      session?.user &&
+      messages.length > 4 &&
+      messages.length % 4 === 0 &&
+      !isMatching
+    ) {
+      console.log('🔄 Auto-updating career matches in background...');
+      // Update silently without showing success message
+      handleMatchCareers(false);
+    }
+  }, [messages.length, session?.user, isMatching]);
 
   const loadChatHistory = async () => {
     try {
@@ -443,14 +517,16 @@ export function ChatInterface() {
     setInputValue('');
   };
 
-  const handleMatchCareers = async () => {
+  const handleMatchCareers = async (showSuccessMessage = true) => {
     if (!session?.user) {
-      const errorMessage: Message = {
-        id: Date.now().toString(),
-        content: 'Please sign in to get career matches.',
-        isAi: true,
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      if (showSuccessMessage) {
+        const errorMessage: Message = {
+          id: Date.now().toString(),
+          content: 'Please sign in to get career matches.',
+          isAi: true,
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      }
       return;
     }
 
@@ -464,36 +540,627 @@ export function ChatInterface() {
       const data = await response.json();
 
       if (response.ok) {
-        const topMatch = data.matches[0];
-        const successMessage: Message = {
-          id: Date.now().toString(),
-          content: `🎉 Great news! I've analyzed our conversation and found ${data.totalMatches} career matches for you!\n\nYour top match is "${topMatch?.career.title}" with a ${topMatch?.matchPercentage}% match!\n\n${topMatch?.matchReason}\n\nHead over to the Careers page to explore all your personalized matches and take the next steps!`,
-          isAi: true,
-        };
-        setMessages(prev => [...prev, successMessage]);
+        console.log('✨ Career matches updated:', data.totalMatches, 'matches');
 
-        // Redirect to careers page after 3 seconds
-        setTimeout(() => {
-          window.location.href = '/careers';
-        }, 3000);
+        if (showSuccessMessage) {
+          const topMatch = data.matches[0];
+          const successMessage: Message = {
+            id: Date.now().toString(),
+            content: `🎉 Great news! I've analyzed our conversation and found ${data.totalMatches} career matches for you!\n\nYour top match is "${topMatch?.career.title}" with a ${topMatch?.matchPercentage}% match!\n\n${topMatch?.matchReason}\n\nHead over to the Careers page to explore all your personalized matches and take the next steps!`,
+            isAi: true,
+          };
+          setMessages(prev => [...prev, successMessage]);
+
+          // Redirect to careers page after 3 seconds
+          setTimeout(() => {
+            window.location.href = '/careers';
+          }, 3000);
+        }
       } else {
+        if (showSuccessMessage) {
+          const errorMessage: Message = {
+            id: Date.now().toString(),
+            content: `Sorry, I couldn't generate matches: ${data.error}`,
+            isAi: true,
+          };
+          setMessages(prev => [...prev, errorMessage]);
+        } else {
+          console.error('Background match update failed:', data.error);
+        }
+      }
+    } catch (error) {
+      console.error('Error matching careers:', error);
+      if (showSuccessMessage) {
         const errorMessage: Message = {
           id: Date.now().toString(),
-          content: `Sorry, I couldn't generate matches: ${data.error}`,
+          content: 'Sorry, I had trouble generating career matches. Please try again.',
           isAi: true,
         };
         setMessages(prev => [...prev, errorMessage]);
       }
-    } catch (error) {
-      console.error('Error matching careers:', error);
-      const errorMessage: Message = {
-        id: Date.now().toString(),
-        content: 'Sorry, I had trouble generating career matches. Please try again.',
-        isAi: true,
-      };
-      setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsMatching(false);
+    }
+  };
+
+  const toggleVoiceRecording = async () => {
+    if (isInVoiceConversationRef.current) {
+      // Exit voice conversation mode
+      console.log('Exiting voice conversation mode');
+      stopRecording();
+      stopInterruptMonitoring();
+      stopPersistentMicrophone(); // Stop the persistent mic stream
+      setIsInVoiceConversation(false);
+      isInVoiceConversationRef.current = false;
+      if (currentAudioRef.current) {
+        currentAudioRef.current.pause();
+        currentAudioRef.current = null;
+      }
+    } else {
+      // Start voice conversation with AI greeting
+      console.log('Starting voice conversation mode');
+      await startVoiceConversation();
+    }
+  };
+
+  const startVoiceConversation = async () => {
+    console.log('🎬 === STARTING VOICE CONVERSATION MODE === 🎬');
+    setIsInVoiceConversation(true);
+    isInVoiceConversationRef.current = true;
+    setIsLoading(true);
+
+    console.log('📡 About to call startInterruptMonitoring...');
+    // Start monitoring for interruptions
+    await startInterruptMonitoring();
+    console.log('✅ Returned from startInterruptMonitoring');
+
+    try {
+      // Simple, short greeting that fits Rime's limits
+      const greeting = "Hello! I'm ready to help you explore career options. What would you like to know?";
+
+      // Add AI greeting to chat
+      const aiMessage: Message = {
+        id: Date.now().toString(),
+        content: greeting,
+        isAi: true,
+      };
+      setMessages(prev => [...prev, aiMessage]);
+
+      // Convert greeting to speech
+      const ttsResponse = await fetch('/api/voice/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: greeting,
+          voice: 'vespera',
+          speedAlpha: 1.0,
+          reduceLatency: true,
+          modelId: 'mist',
+        }),
+      });
+
+      if (ttsResponse.ok) {
+        const ttsData = await ttsResponse.json();
+
+        // Play greeting and then start listening
+        await playAudioAndThenListen(ttsData.audioUrl);
+      } else {
+        console.error('TTS failed, starting to listen anyway');
+        // If TTS fails, just start listening
+        await startRecording();
+      }
+    } catch (error) {
+      console.error('Error starting voice conversation:', error);
+      setIsInVoiceConversation(false);
+      isInVoiceConversationRef.current = false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const interruptAI = () => {
+    // Stop any currently playing audio
+    if (currentAudioRef.current) {
+      console.log('🛑 User interrupted AI - stopping audio playback');
+      currentAudioRef.current.pause();
+      currentAudioRef.current.currentTime = 0;
+      currentAudioRef.current = null;
+      isAiSpeakingRef.current = false;
+      setIsAiSpeaking(false);
+    }
+  };
+
+  const startInterruptMonitoring = async () => {
+    try {
+      console.log('🎤 Setting up interrupt monitoring with persistent microphone...');
+
+      // Get or reuse persistent microphone access
+      if (!persistentMicStreamRef.current) {
+        console.log('Requesting persistent microphone access...');
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true
+          }
+        });
+        persistentMicStreamRef.current = stream;
+        console.log('✓ Persistent microphone access granted');
+      } else {
+        console.log('✓ Using existing persistent microphone stream');
+      }
+
+      // Setup audio analysis for interrupt detection
+      const audioContext = new AudioContext();
+      interruptAudioContextRef.current = audioContext;
+      const source = audioContext.createMediaStreamSource(persistentMicStreamRef.current);
+      const analyser = audioContext.createAnalyser();
+      interruptAnalyserRef.current = analyser;
+
+      analyser.fftSize = 2048;
+      analyser.smoothingTimeConstant = 0.8;
+      source.connect(analyser);
+
+      console.log('👂 Interrupt monitoring audio context created and connected');
+
+      // Start monitoring for voice
+      monitorForInterruption();
+    } catch (error) {
+      console.error('❌ Failed to start interrupt monitoring:', error);
+    }
+  };
+
+  const stopInterruptMonitoring = () => {
+    // Close the audio context but keep the microphone stream active
+    if (interruptAudioContextRef.current) {
+      interruptAudioContextRef.current.close();
+      interruptAudioContextRef.current = null;
+    }
+    interruptAnalyserRef.current = null;
+    console.log('👂 Interrupt monitoring stopped (mic stream kept alive)');
+  };
+
+  const stopPersistentMicrophone = () => {
+    if (persistentMicStreamRef.current) {
+      persistentMicStreamRef.current.getTracks().forEach(track => track.stop());
+      persistentMicStreamRef.current = null;
+      console.log('🎤 Persistent microphone stream stopped');
+    }
+  };
+
+  const monitorForInterruption = () => {
+    if (!interruptAnalyserRef.current) {
+      console.log('⚠️ No interrupt analyser available');
+      return;
+    }
+
+    const analyser = interruptAnalyserRef.current;
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    const INTERRUPT_THRESHOLD = 35; // Lower threshold for better detection
+    const INTERRUPT_DURATION = 250; // 250ms of speech to trigger interrupt
+
+    let soundStart: number | null = null;
+
+    const checkForVoice = () => {
+      // Only monitor when in conversation mode
+      if (!isInVoiceConversationRef.current) {
+        console.log('👋 Conversation mode ended, stopping interrupt monitor');
+        return;
+      }
+
+      analyser.getByteFrequencyData(dataArray);
+      const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+
+      // Log audio level every 2 seconds for debugging
+      if (Math.random() < 0.01) {
+        console.log('🎧 Interrupt monitor audio level:', average.toFixed(1), '| AI speaking:', isAiSpeakingRef.current);
+      }
+
+      // Only interrupt if AI is actually speaking
+      if (isAiSpeakingRef.current && average > INTERRUPT_THRESHOLD) {
+        if (soundStart === null) {
+          soundStart = Date.now();
+          console.log('🎤 Detected potential user speech while AI is talking (level:', average.toFixed(1), ')');
+        } else if (Date.now() - soundStart > INTERRUPT_DURATION) {
+          console.log('🛑 User is speaking - interrupting AI!');
+          interruptAI();
+          // Start recording immediately
+          startRecording();
+          soundStart = null; // Reset
+          return;
+        }
+      } else {
+        soundStart = null;
+      }
+
+      requestAnimationFrame(checkForVoice);
+    };
+
+    console.log('🔊 Starting interrupt voice detection loop');
+    checkForVoice();
+  };
+
+  const playAudioAndThenListen = async (audioUrl: string) => {
+    return new Promise<void>((resolve) => {
+      try {
+        console.log('Creating audio element...');
+        console.log('Audio URL length:', audioUrl.length);
+        console.log('Audio URL preview:', audioUrl.substring(0, 50));
+
+        const audio = new Audio();
+        audio.volume = 1.0;
+        audio.src = audioUrl;
+        currentAudioRef.current = audio;
+        isAiSpeakingRef.current = true;
+        setIsAiSpeaking(true);
+
+        audio.onloadedmetadata = () => {
+          console.log('Audio loaded, duration:', audio.duration, 'seconds');
+        };
+
+        audio.oncanplay = () => {
+          console.log('Audio can play');
+        };
+
+        audio.onended = async () => {
+          console.log('AI finished speaking, starting to listen...');
+          currentAudioRef.current = null;
+          isAiSpeakingRef.current = false;
+          setIsAiSpeaking(false);
+          // Wait a brief moment then start recording (reduced for faster response)
+          await new Promise(r => setTimeout(r, 200));
+          await startRecording();
+          resolve();
+        };
+
+        audio.onerror = async (e) => {
+          console.error('Audio playback error:', e);
+          console.error('Audio error object:', audio.error);
+          currentAudioRef.current = null;
+          isAiSpeakingRef.current = false;
+          setIsAiSpeaking(false);
+          console.log('Audio failed, skipping to listening...');
+          await startRecording();
+          resolve();
+        };
+
+        audio.onpause = () => {
+          console.log('Audio paused');
+          isAiSpeakingRef.current = false;
+          setIsAiSpeaking(false);
+        };
+
+        console.log('Attempting to play audio...');
+        audio.play()
+          .then(() => {
+            console.log('✓ Audio is playing!');
+          })
+          .catch(async (err) => {
+            console.error('Play failed:', err.name, err.message);
+            if (err.name === 'NotAllowedError') {
+              console.log('Autoplay blocked by browser - this is normal');
+              alert('Browser blocked audio autoplay. The AI has greeted you in the chat. Click OK to start talking!');
+            }
+            currentAudioRef.current = null;
+            await startRecording();
+            resolve();
+          });
+      } catch (error) {
+        console.error('Error in playAudioAndThenListen:', error);
+        startRecording();
+        resolve();
+      }
+    });
+  };
+
+  const startRecording = async () => {
+    try {
+      console.log('Starting recording... Voice conversation mode:', isInVoiceConversationRef.current);
+
+      // Interrupt AI if speaking
+      interruptAI();
+
+      // ALWAYS get a fresh microphone stream for better audio quality
+      console.log('Requesting fresh microphone stream for recording...');
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 44100 // Higher sample rate for better quality
+        }
+      });
+      console.log('✓ Fresh microphone stream obtained');
+
+      // Create media recorder
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      // Setup audio context for VAD (separate from interrupt monitoring)
+      const audioContext = new AudioContext();
+      audioContextRef.current = audioContext;
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyserRef.current = analyser;
+
+      analyser.fftSize = 2048;
+      source.connect(analyser);
+
+      // Collect audio chunks
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      // Handle recording stop
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        await processVoiceInput(audioBlob);
+
+        // Cleanup stream and audio context
+        stream.getTracks().forEach(track => track.stop());
+        if (audioContextRef.current) {
+          audioContextRef.current.close();
+          audioContextRef.current = null;
+        }
+        console.log('✓ Recording stopped, stream cleaned up');
+      };
+
+      // Start recording
+      mediaRecorder.start();
+      setIsRecording(true);
+      isRecordingRef.current = true;
+      setInputValue('Listening...');
+
+      // Start VAD monitoring
+      console.log('🎙️ Recording started, starting VAD monitoring...');
+      monitorSilence();
+    } catch (error) {
+      console.error('Error starting recording:', error);
+      alert('Could not access microphone. Please check permissions.');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      isRecordingRef.current = false;
+      setInputValue('');
+
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+      }
+    }
+  };
+
+  const monitorSilence = () => {
+    if (!analyserRef.current) {
+      console.log('No analyser available for VAD');
+      return;
+    }
+
+    const analyser = analyserRef.current;
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    const SILENCE_THRESHOLD = 20; // Even lower threshold = more sensitive to speech
+    const SILENCE_DURATION = 3000; // 3 seconds of silence before stopping
+    const MIN_RECORDING_DURATION = 1000; // Minimum 1 second of recording
+
+    let silenceStart: number | null = null;
+    const recordingStartTime = Date.now();
+
+    const checkAudioLevel = () => {
+      // Check using ref instead of state to avoid closure issues
+      if (!isRecordingRef.current) {
+        console.log('VAD stopped - recording is false');
+        return;
+      }
+
+      analyser.getByteFrequencyData(dataArray);
+      const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+
+      // Log audio level every 100 checks to avoid spam
+      if (Math.random() < 0.01) {
+        console.log('Audio level:', average.toFixed(2));
+      }
+
+      if (average < SILENCE_THRESHOLD) {
+        if (silenceStart === null) {
+          silenceStart = Date.now();
+          console.log('🔇 Silence started');
+        } else {
+          const silenceDuration = Date.now() - silenceStart;
+          const recordingDuration = Date.now() - recordingStartTime;
+
+          // Only stop if we've been recording for at least MIN_RECORDING_DURATION
+          // AND we've had silence for SILENCE_DURATION
+          if (silenceDuration > SILENCE_DURATION && recordingDuration > MIN_RECORDING_DURATION) {
+            console.log('🔇 Silence detected for 3.0s (recorded for ' + (recordingDuration / 1000).toFixed(1) + 's) - auto-stopping recording');
+            stopRecording();
+            return;
+          }
+        }
+      } else {
+        if (silenceStart !== null) {
+          console.log('🎤 Voice detected (level: ' + average.toFixed(1) + '), resetting silence timer');
+        }
+        silenceStart = null;
+      }
+
+      requestAnimationFrame(checkAudioLevel);
+    };
+
+    console.log('Starting VAD monitoring');
+    checkAudioLevel();
+  };
+
+  const processVoiceInput = async (audioBlob: Blob) => {
+    setIsLoading(true);
+    setInputValue('Processing...');
+
+    try {
+      // Check if audio blob has content
+      console.log('📦 Audio blob size:', audioBlob.size, 'bytes');
+
+      if (audioBlob.size < 1000) {
+        console.warn('⚠️ Audio blob too small, likely no speech - skipping');
+        setInputValue('');
+        setIsLoading(false);
+
+        // If in voice conversation, just start listening again
+        if (isInVoiceConversationRef.current) {
+          console.log('🔄 No speech detected, continuing to listen...');
+          await new Promise(r => setTimeout(r, 500));
+          await startRecording();
+        }
+        return;
+      }
+
+      // Convert blob to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(audioBlob);
+
+      await new Promise((resolve) => {
+        reader.onloadend = resolve;
+      });
+
+      const base64Audio = reader.result as string;
+
+      // Send to voice processing API with conversation context
+      const response = await fetch('/api/voice/process', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          audio: base64Audio,
+          voice: 'vespera',
+          speedAlpha: 1.0,
+          reduceLatency: true,
+          modelId: 'mist',
+          messages: messages.map(msg => ({
+            role: msg.isAi ? 'assistant' : 'user',
+            content: msg.content,
+          })),
+          userId: session?.user?.id,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+
+        // Add user's transcribed message
+        const userMessage: Message = {
+          id: Date.now().toString(),
+          content: data.transcript,
+          isAi: false,
+        };
+        setMessages(prev => [...prev, userMessage]);
+
+        // Add AI response
+        const aiMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          content: data.response,
+          isAi: true,
+        };
+        setMessages(prev => [...prev, aiMessage]);
+
+        // Play AI response audio and continue listening if in voice conversation
+        console.log('Voice conversation mode ref:', isInVoiceConversationRef.current);
+        if (data.audioUrl && isInVoiceConversationRef.current) {
+          console.log('✓ Continuing voice conversation - will play audio and listen again');
+          await playAudioAndThenListen(data.audioUrl);
+        } else if (data.audioUrl) {
+          console.log('Single voice interaction - just playing audio');
+          playAudio(data.audioUrl);
+        }
+
+        setInputValue('');
+      } else {
+        console.error('❌ Voice API returned error status:', response.status);
+
+        let error;
+        const contentType = response.headers.get('content-type');
+
+        if (contentType && contentType.includes('application/json')) {
+          error = await response.json();
+          console.error('Error response body:', error);
+        } else {
+          const textError = await response.text();
+          console.error('Error response (text):', textError);
+          error = { error: textError };
+        }
+
+        setInputValue('');
+
+        // Check if it's a "no speech detected" error
+        const errorMessage = error.error || error.message || '';
+        if (errorMessage.includes('No speech detected')) {
+          console.log('⚠️ No speech detected in audio - continuing conversation...');
+          console.log('💡 Tip: Speak louder and closer to your microphone, or check your mic settings');
+
+          // If in voice conversation, just start listening again without stopping
+          if (isInVoiceConversationRef.current) {
+            await new Promise(r => setTimeout(r, 500));
+            await startRecording();
+            return;
+          }
+        } else {
+          console.error('❌ Other error:', errorMessage);
+        }
+
+        // For other errors, show alert and stop conversation
+        alert(`Error: ${errorMessage || 'Failed to process voice'}`);
+        if (isInVoiceConversationRef.current) {
+          setIsInVoiceConversation(false);
+          isInVoiceConversationRef.current = false;
+        }
+      }
+    } catch (error) {
+      console.error('Error processing voice:', error);
+      setInputValue('');
+      alert('Failed to process voice. Please try again.');
+      if (isInVoiceConversationRef.current) {
+        setIsInVoiceConversation(false);
+        isInVoiceConversationRef.current = false;
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const playAudio = (audioUrl: string) => {
+    try {
+      const audio = new Audio(audioUrl);
+      audio.volume = 1.0;
+      currentAudioRef.current = audio;
+      isAiSpeakingRef.current = true;
+      setIsAiSpeaking(true);
+
+      audio.onended = () => {
+        isAiSpeakingRef.current = false;
+        setIsAiSpeaking(false);
+      };
+
+      audio.onerror = () => {
+        isAiSpeakingRef.current = false;
+        setIsAiSpeaking(false);
+      };
+
+      audio.onpause = () => {
+        isAiSpeakingRef.current = false;
+        setIsAiSpeaking(false);
+      };
+
+      audio.play().catch(() => {
+        console.log('Autoplay blocked, but audio is ready');
+        isAiSpeakingRef.current = false;
+        setIsAiSpeaking(false);
+      });
+    } catch (error) {
+      console.error('Error playing audio:', error);
+      isAiSpeakingRef.current = false;
+      setIsAiSpeaking(false);
     }
   };
 
@@ -501,14 +1168,16 @@ export function ChatInterface() {
     <Container>
       <Header>
         <Logo>
-          <IconButton>
-            {/* Hamburger Menu */}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </IconButton>
-          <LogoCircle>pf</LogoCircle>
-          <LogoText data-text="ai-pathfinder">ai-pathfinder</LogoText>
+          <LogoCircle>
+            <Image
+              src="/logo-icon.jpeg"
+              alt="AI Pathfinder Logo"
+              width={70}
+              height={70}
+              style={{ objectFit: 'cover', background: 'transparent' }}
+            />
+          </LogoCircle>
+          <LogoText>ai-pathfinder</LogoText>
         </Logo>
         <HeaderIcons>
           <IconButton onClick={handleNewChat} title="Start new chat">
@@ -550,7 +1219,32 @@ export function ChatInterface() {
       </ChatArea>
 
       <InputContainer>
-        {session?.user && messages.length > 2 && (
+        {isAiSpeaking && !isRecording && (
+          <VoiceIndicator style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+            </svg>
+            <VoiceText>AI is speaking... (Click mic button to interrupt and speak)</VoiceText>
+          </VoiceIndicator>
+        )}
+
+        {isInVoiceConversation && !isRecording && !isLoading && !isAiSpeaking && (
+          <VoiceIndicator style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+              <path d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+            </svg>
+            <VoiceText>Voice mode active - Ready to listen</VoiceText>
+          </VoiceIndicator>
+        )}
+
+        {isRecording && (
+          <VoiceIndicator>
+            <VoiceDot />
+            <VoiceText>Listening... (Speak now or stay silent to continue)</VoiceText>
+          </VoiceIndicator>
+        )}
+
+        {session?.user && messages.length > 2 && !isRecording && (
           <MatchButton onClick={handleMatchCareers} disabled={isMatching}>
             {isMatching ? (
               <>
@@ -586,21 +1280,19 @@ export function ChatInterface() {
             placeholder={isLoading ? "AI Pathfinder is thinking..." : "Ask me anything..."}
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleSend();
+              }
+            }}
             disabled={isLoading}
           />
 
-          <ActionButton>
-            {/* Microphone Icon */}
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-            </svg>
-          </ActionButton>
-
           <VoiceButton
-            $active={isVoiceMode}
-            onClick={() => setIsVoiceMode(!isVoiceMode)}
-            title="Voice chat"
+            $active={isRecording || isInVoiceConversation}
+            onClick={toggleVoiceRecording}
+            disabled={isLoading}
+            title={isInVoiceConversation ? "End voice conversation" : "Start voice conversation"}
           >
             {/* Voice/Audio Icon */}
             <svg viewBox="0 0 24 24" fill="currentColor">
@@ -610,8 +1302,6 @@ export function ChatInterface() {
           </VoiceButton>
         </InputRow>
       </InputContainer>
-
-      <VoiceChat isOpen={isVoiceMode} onClose={() => setIsVoiceMode(false)} />
     </Container>
   );
 }

@@ -26,7 +26,7 @@ const NavItem = styled(Link)<{ $active: boolean }>`
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  color: ${({ $active }) => ($active ? '#000000' : '#9CA3AF')};
+  color: ${({ $active }) => ($active ? '#000000' : '#000000')};
   transition: ${({ theme }) => theme.transitions.fast};
   cursor: pointer;
   position: relative;
@@ -46,20 +46,24 @@ const NavIcon = styled.div<{ $active: boolean }>`
   svg {
     width: 100%;
     height: 100%;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
+    fill: ${({ $active }) => ($active ? '#000000' : 'none')};
+    stroke: ${({ $active }) => ($active ? 'none' : '#000000')};
+    stroke-width: 2.5;
   }
 `;
 
 const CenterButton = styled.div<{ $active: boolean }>`
-  width: 40px;
-  height: 40px;
-  border-radius: ${({ theme }) => theme.borderRadius.full};
-  background: ${({ $active }) =>
-    $active
-      ? `radial-gradient(circle, #7CFC00 0%, #00E5CC 50%, #00BFFF 100%)`
-      : 'linear-gradient(135deg, #00E5CC 0%, #00BFFF 100%)'};
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center,
+    rgba(255, 255, 255, 1) 0%,
+    rgba(255, 255, 255, 0.9) 5%,
+    rgba(200, 255, 100, 0.8) 15%,
+    rgba(124, 252, 0, 0.9) 30%,
+    rgba(0, 229, 204, 1) 55%,
+    rgba(0, 191, 255, 1) 80%,
+    rgba(0, 150, 255, 1) 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -70,27 +74,28 @@ const CenterButton = styled.div<{ $active: boolean }>`
   ${({ $active }) =>
     $active &&
     `
-    box-shadow:
-      0 0 25px rgba(124, 252, 0, 0.6),
-      0 0 40px rgba(0, 229, 204, 0.4),
-      0 0 55px rgba(0, 191, 255, 0.3);
-    animation: pulse 2s ease-in-out infinite;
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: radial-gradient(circle,
+        rgba(180, 255, 100, 0.3) 0%,
+        rgba(170, 255, 100, 0.25) 20%,
+        rgba(160, 255, 100, 0.18) 35%,
+        rgba(150, 255, 100, 0.12) 50%,
+        rgba(140, 255, 100, 0.08) 65%,
+        rgba(130, 255, 100, 0.04) 80%,
+        rgba(124, 252, 0, 0.01) 90%,
+        rgba(124, 252, 0, 0) 100%);
+      z-index: -1;
+      filter: blur(8px);
+    }
   `}
-
-  @keyframes pulse {
-    0%, 100% {
-      box-shadow:
-        0 0 25px rgba(124, 252, 0, 0.6),
-        0 0 40px rgba(0, 229, 204, 0.4),
-        0 0 55px rgba(0, 191, 255, 0.3);
-    }
-    50% {
-      box-shadow:
-        0 0 35px rgba(124, 252, 0, 0.8),
-        0 0 50px rgba(0, 229, 204, 0.6),
-        0 0 70px rgba(0, 191, 255, 0.4);
-    }
-  }
 
   &:hover {
     transform: scale(1.05);
@@ -98,25 +103,44 @@ const CenterButton = styled.div<{ $active: boolean }>`
 `;
 
 const CenterButtonInner = styled.div`
-  width: 10px;
-  height: 10px;
-  background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.9) 40%, rgba(255, 255, 255, 0) 100%);
+  width: 8px;
+  height: 8px;
+  background: white;
   border-radius: 50%;
-  filter: blur(0.8px);
+  opacity: 0;
 `;
 
 export function Navigation() {
   const pathname = usePathname();
 
   const isActive = (path: string) => pathname === path;
+  const isHomeActive = pathname === '/' || pathname === '/action-plan';
 
   return (
     <NavContainer>
       {/* Home Icon */}
-      <NavItem href="/" $active={isActive('/')}>
-        <NavIcon $active={isActive('/')}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+      <NavItem href="/" $active={isHomeActive}>
+        <NavIcon $active={isHomeActive}>
+          <svg viewBox="0 0 24 24" fill="none">
+            {/* House body - split into sections to avoid door area */}
+            <path
+              d={isHomeActive
+                ? "M4 10L12 3L20 10V20C20 20.5304 19.7893 21.0391 19.4142 21.4142C19.0391 21.7893 18.5304 22 18 22H15.5V13C15.5 12.4477 15.0523 12 14.5 12H9.5C8.94772 12 8.5 12.4477 8.5 13V22H6C5.46957 22 4.96086 21.7893 4.58579 21.4142C4.21071 21.0391 4 20.5304 4 20V10Z"
+                : "M4 10L12 3L20 10V20C20 20.5304 19.7893 21.0391 19.4142 21.4142C19.0391 21.7893 18.5304 22 18 22H14.5V13C14.5 12.4477 14.0523 12 13.5 12H10.5C9.94772 12 9.5 12.4477 9.5 13V22H6C5.46957 22 4.96086 21.7893 4.58579 21.4142C4.21071 21.0391 4 20.5304 4 20V10Z"
+              }
+              fill={isHomeActive ? 'currentColor' : 'none'}
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Door sides - only show when not active */}
+            {!isHomeActive && (
+              <>
+                <line x1="9.5" y1="13" x2="9.5" y2="22" stroke="currentColor" strokeWidth="2.5" />
+                <line x1="14.5" y1="13" x2="14.5" y2="22" stroke="currentColor" strokeWidth="2.5" />
+              </>
+            )}
           </svg>
         </NavIcon>
       </NavItem>
@@ -129,8 +153,26 @@ export function Navigation() {
       {/* Jobs/Briefcase Icon */}
       <NavItem href="/jobs" $active={isActive('/jobs')}>
         <NavIcon $active={isActive('/jobs')}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />
+          <svg viewBox="0 0 24 24" fill="none">
+            {/* Main body */}
+            <rect
+              x="3"
+              y="9"
+              width="18"
+              height="11"
+              rx="2"
+              fill={isActive('/jobs') ? 'currentColor' : 'none'}
+              stroke="currentColor"
+              strokeWidth="2"
+            />
+            {/* Handle - always stroked, never filled */}
+            <path
+              d="M8 9V6a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v3"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
           </svg>
         </NavIcon>
       </NavItem>

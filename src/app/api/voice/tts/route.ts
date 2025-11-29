@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { AssemblyAI } from 'assemblyai';
-import { VOICE_SYSTEM_PROMPT } from '@/lib/ai-prompts';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,85 +13,34 @@ export async function POST(request: NextRequest) {
     }
 
     const {
-      audio,
+      text,
       voice,
-      messages = [],
-      userId,
       speedAlpha = 1.0,
-      reduceLatency = true,
+      reduceLatency = false,
       modelId = 'mist'
     } = await request.json();
 
-    if (!audio) {
+    if (!text) {
       return NextResponse.json(
-        { error: 'Audio data is required' },
+        { error: 'Text is required' },
         { status: 400 }
       );
     }
 
-    // Initialize Assembly AI client
-    const assemblyai = new AssemblyAI({
-      apiKey: process.env.ASSEMBLYAI_API_KEY || '',
-    });
+    // Validate speedAlpha range (0.5 to 2.0 is typical for TTS)
+    const validatedSpeed = Math.max(0.5, Math.min(2.0, speedAlpha));
 
-    // Convert base64 audio to buffer
-    const audioBuffer = Buffer.from(audio.split(',')[1], 'base64');
+    // Validate modelId (mist is faster, v1 is higher quality)
+    const validatedModel = ['mist', 'v1'].includes(modelId) ? modelId : 'mist';
 
-    // Transcribe audio using Assembly AI
-    console.log('Transcribing audio...');
-    const transcript = await assemblyai.transcripts.transcribe({
-      audio: audioBuffer,
-    });
-
-    if (transcript.status === 'error') {
-      throw new Error(`Transcription failed: ${transcript.error}`);
-    }
-
-    const transcribedText = transcript.text || '';
-    console.log('Transcription:', transcribedText);
-
-    if (!transcribedText) {
-      return NextResponse.json(
-        { error: 'No speech detected in audio' },
-        { status: 400 }
-      );
-    }
-
-    // Send transcript to existing chat API with voice context
-    const chatResponse = await fetch(`${process.env.NEXTAUTH_URL}/api/chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Cookie': request.headers.get('cookie') || '',
-      },
-      body: JSON.stringify({
-        messages: [
-          {
-            role: 'system',
-            content: VOICE_SYSTEM_PROMPT
-          },
-          ...messages,
-          {
-            role: 'user',
-            content: transcribedText,
-          },
-        ],
-        userId: userId || session.user.id,
-      }),
-    });
-
-    if (!chatResponse.ok) {
-      throw new Error('Failed to get AI response');
-    }
-
-    const chatData = await chatResponse.json();
-    const aiResponse = chatData.message;
-
-    console.log('AI Response:', aiResponse);
-
-    // Convert AI response to speech using Rime
+    // Convert text to speech using Rime
     console.log('Generating speech with Rime...');
-    console.log('Voice settings:', { voice, speedAlpha, reduceLatency, modelId });
+    console.log('TTS Settings:', {
+      voice: voice || process.env.RIME_DEFAULT_VOICE || 'vespera',
+      speedAlpha: validatedSpeed,
+      reduceLatency,
+      modelId: validatedModel
+    });
 
     const rimeResponse = await fetch('https://users.rime.ai/v1/rime-tts', {
       method: 'POST',
@@ -103,10 +50,10 @@ export async function POST(request: NextRequest) {
         'Accept': 'audio/mpeg',
       },
       body: JSON.stringify({
-        text: aiResponse,
+        text: text,
         speaker: voice || process.env.RIME_DEFAULT_VOICE || 'vespera',
-        modelId: modelId,
-        speedAlpha: speedAlpha,
+        modelId: validatedModel,
+        speedAlpha: validatedSpeed,
         reduceLatency: reduceLatency,
       }),
     });
@@ -146,14 +93,12 @@ export async function POST(request: NextRequest) {
     const actualContentType = contentType.includes('application/json') ? 'audio/wav' : contentType;
 
     return NextResponse.json({
-      transcript: transcribedText,
-      response: aiResponse,
       audioUrl: `data:${actualContentType};base64,${audioBase64}`,
     });
   } catch (error: any) {
-    console.error('Error in voice processing:', error);
+    console.error('Error in TTS:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to process voice request' },
+      { error: error.message || 'Failed to generate speech' },
       { status: 500 }
     );
   }

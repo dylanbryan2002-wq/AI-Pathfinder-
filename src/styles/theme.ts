@@ -6,15 +6,17 @@ export const theme = {
     // Primary Brand Colors
     primary: {
       green: '#7CFC00',      // Super bright lime green from logo (ai)
-      blue: '#00BFFF',       // Deep sky blue from logo (finder)
-      gradient: 'linear-gradient(90deg, #7CFC00 0%, #00E5CC 50%, #00BFFF 100%)',
+      teal: '#00CED1',       // Turquoise/Teal from logo
+      blue: '#4A90E2',       // Medium blue from logo (finder)
+      lightBlue: '#5DD9FC',  // Light blue accent
+      gradient: 'linear-gradient(90deg, #7CFC00 0%, #00CED1 35%, #4A90E2 65%, #5DD9FC 100%)',
     },
 
     // Secondary Colors
     secondary: {
-      lightBlue: '#00D9FF',
-      cyan: '#00E5CC',
-      teal: '#14B8A6',
+      lightBlue: '#5DD9FC',
+      cyan: '#00CED1',
+      teal: '#00CED1',
       grey: '#6B7280',
     },
 
@@ -37,8 +39,8 @@ export const theme = {
     // Button Colors
     button: {
       try: '#5DD9FC',        // Light cyan "Try" button
-      commit: '#00BFFF',     // Blue "Commit" button
-      commitGradient: 'linear-gradient(90deg, #00E5CC 0%, #00BFFF 100%)',
+      commit: '#4A90E2',     // Blue "Commit" button
+      commitGradient: 'linear-gradient(90deg, #00CED1 0%, #4A90E2 100%)',
     },
 
     // Status Colors
@@ -69,7 +71,7 @@ export const theme = {
     // Voice Mode
     voice: {
       blob: '#7CFC00',       // Super bright lime green animated blob
-      active: '#00BFFF',     // Deep sky blue when speaking
+      active: '#4A90E2',     // Medium blue when speaking
       inactive: '#E5E7EB',   // Gray when inactive
     },
 
@@ -77,7 +79,7 @@ export const theme = {
     nav: {
       active: '#000000',
       inactive: '#9CA3AF',
-      glow: 'radial-gradient(circle, rgba(124, 252, 0, 1) 0%, rgba(0, 229, 204, 0.9) 50%, rgba(0, 191, 255, 1) 100%)',
+      glow: 'radial-gradient(circle, rgba(124, 252, 0, 1) 0%, rgba(0, 206, 209, 0.9) 50%, rgba(74, 144, 226, 1) 100%)',
     },
   },
 

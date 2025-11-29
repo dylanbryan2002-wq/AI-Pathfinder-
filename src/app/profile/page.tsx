@@ -128,7 +128,7 @@ const SliderContainer = styled.div`
 const SliderTrack = styled.div<{ $isDragging?: boolean }>`
   position: relative;
   height: 12px;
-  background: linear-gradient(90deg, #EF4444 0%, #10B981 100%);
+  background: linear-gradient(90deg, #FF6B6B 0%, #FFB6B6 45%, #C8E6C9 55%, #81C784 100%);
   border-radius: ${({ theme }) => theme.borderRadius.full};
   cursor: pointer;
   box-shadow: ${({ $isDragging }) => $isDragging ? '0 0 12px rgba(239, 68, 68, 0.4)' : 'inset 0 2px 4px rgba(0, 0, 0, 0.1)'};
@@ -161,10 +161,11 @@ const SliderThumb = styled.div<{ $value: number; $isDragging?: boolean }>`
 `;
 
 const SectionTitle = styled.h3`
-  font-size: ${({ theme }) => theme.typography.fontSize.xl};
+  font-size: 2rem;
   font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0 0 1rem 0;
+  color: #6B7280;
+  margin: 2rem 0 1.5rem 0;
+  text-align: center;
 `;
 
 const HighlightsGrid = styled.div`
@@ -202,21 +203,21 @@ const PsychometricGrid = styled.div`
 
 const PsychometricCard = styled.div<{ $gradient: string }>`
   background: ${({ $gradient }) => $gradient};
-  border-radius: ${({ theme }) => theme.borderRadius.xl};
-  padding: 1.5rem;
-  box-shadow: ${({ theme }) => theme.shadows.card};
+  border-radius: 24px;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: ${({ theme }) => theme.transitions.normal};
   position: relative;
   overflow: hidden;
-  min-height: 140px;
+  min-height: 160px;
   display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
     transform: translateY(-4px);
-    box-shadow: ${({ theme }) => theme.shadows.xl};
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
   }
 
   &::before {
@@ -242,10 +243,13 @@ const PsychometricIcon = styled.div`
 `;
 
 const PsychometricTitle = styled.h4`
-  font-size: ${({ theme }) => theme.typography.fontSize.lg};
+  font-size: 2.75rem;
   font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
   color: white;
-  margin: 0 0 0.5rem 0;
+  margin: 0;
+  text-align: center;
+  letter-spacing: -0.5px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 `;
 
 const PsychometricStatus = styled.div`
@@ -373,7 +377,7 @@ const psychometricCategories = [
     title: 'Personality',
     icon: '🧠',
     status: 'Completed',
-    gradient: 'linear-gradient(135deg, #6B7280 0%, #9CA3AF 100%)'
+    gradient: 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)'
   },
   {
     id: 'skills',
@@ -561,108 +565,48 @@ export default function ProfilePage() {
       </Header>
 
       <ContentArea>
-        <ProfileSection>
-          <Avatar>{getInitials(profileData.name)}</Avatar>
-          <UserName>{profileData.name || 'AI Pathfinder User'}</UserName>
-          <UserBio>
-            {profileData.bio ||
-             (profileData.stats.totalMatches > 0
-               ? `Exploring ${profileData.stats.totalMatches} career matches`
-               : '')}
-          </UserBio>
-        </ProfileSection>
-
-        <ProgressSliderSection>
-          <SliderLabels>
-            <SliderLabel>Moving away from...</SliderLabel>
-            <SliderLabel>Moving towards...</SliderLabel>
-          </SliderLabels>
-          <MovingFromInput
-            type="text"
-            value={movingFromText}
-            onChange={(e) => setMovingFromText(e.target.value)}
-            placeholder="What are you moving away from?"
-          />
-          <SliderContainer>
-            <SliderTrack
-              ref={sliderRef}
-              $isDragging={isDragging}
-              onMouseDown={handleSliderMouseDown}
-            >
-              <SliderThumb $value={sliderValue} $isDragging={isDragging} />
-            </SliderTrack>
-          </SliderContainer>
-        </ProgressSliderSection>
-
-        <SectionTitle>Self-Awareness Profile</SectionTitle>
+        <SectionTitle>Learn about you're</SectionTitle>
         <PsychometricGrid>
           {[
             {
               id: 'personality',
               title: 'Personality',
-              icon: '🧠',
-              status: getPsychometricStatus(profileData.personality, 'personality'),
-              gradient: 'linear-gradient(135deg, #6B7280 0%, #9CA3AF 100%)',
-              data: profileData.personality,
+              gradient: 'linear-gradient(135deg, #EF4444 0%, #9333EA 100%)',
             },
             {
               id: 'skills',
               title: 'Skills',
-              icon: '⚡',
-              status: getPsychometricStatus(profileData.skills, 'skills'),
               gradient: 'linear-gradient(135deg, #14B8A6 0%, #FBBF24 100%)',
-              data: profileData.skills,
             },
             {
               id: 'goals',
               title: 'Goals',
-              icon: '🎯',
-              status: getPsychometricStatus(profileData.goals, 'goals'),
-              gradient: 'linear-gradient(135deg, #93C5FD 0%, #7FE7A8 100%)',
-              data: profileData.goals,
+              gradient: 'linear-gradient(135deg, #A7F3D0 0%, #93C5FD 100%)',
             },
             {
               id: 'values',
               title: 'Values',
-              icon: '💎',
-              status: getPsychometricStatus(profileData.values, 'values'),
-              gradient: 'linear-gradient(135deg, #00E5CC 0%, #6B7280 100%)',
-              data: profileData.values,
+              gradient: 'linear-gradient(135deg, #8B5CF6 0%, #14B8A6 100%)',
             },
             {
               id: 'interest',
-              title: 'Interests',
-              icon: '❤️',
-              status: getPsychometricStatus(profileData.interests, 'interests'),
-              gradient: 'linear-gradient(135deg, #3B82F6 0%, #00BFFF 100%)',
-              data: profileData.interests,
+              title: 'Interest',
+              gradient: 'linear-gradient(135deg, #1E40AF 0%, #A855F7 100%)',
             },
             {
-              id: 'workExperience',
-              title: 'Experience',
-              icon: '💼',
-              status: getPsychometricStatus(profileData.workExperience, 'experience'),
-              gradient: 'linear-gradient(135deg, #FBBF24 0%, #9CA3AF 100%)',
-              data: profileData.workExperience,
+              id: 'beliefs',
+              title: 'Beliefs',
+              gradient: 'linear-gradient(135deg, #FDE047 0%, #F9A8D4 100%)',
             },
           ].map((category) => (
             <PsychometricCard
               key={category.id}
               $gradient={category.gradient}
-              title={category.data && category.data.length > 0 ? category.data.join(', ') : 'Not yet analyzed'}
             >
-              <div>
-                <PsychometricIcon>{category.icon}</PsychometricIcon>
-                <PsychometricTitle>{category.title}</PsychometricTitle>
-              </div>
-              <PsychometricStatus>{category.status}</PsychometricStatus>
+              <PsychometricTitle>{category.title}</PsychometricTitle>
             </PsychometricCard>
           ))}
         </PsychometricGrid>
-
-        <ActionButton onClick={() => router.push('/chat')}>
-          {profileData.stats.hasChatHistory ? 'Continue Conversation' : 'Start Your Career Journey'}
-        </ActionButton>
       </ContentArea>
 
       <Navigation />

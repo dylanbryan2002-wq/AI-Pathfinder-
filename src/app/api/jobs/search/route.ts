@@ -33,27 +33,64 @@ interface AdzunaJob {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const query = searchParams.get('q') || 'career';
-    const location = searchParams.get('location') || 'US';
+    const query = searchParams.get('q');
+    const location = searchParams.get('location');
     const page = parseInt(searchParams.get('page') || '1');
     const resultsPerPage = parseInt(searchParams.get('results_per_page') || '20');
     const source = searchParams.get('source') || 'all'; // all, adzuna, themuse, remotive, usajobs
 
+    // If no query or location specified, fetch from database (for "All Jobs" tab)
+    if (!query && !location) {
+      console.log('Fetching all jobs from database...');
+      const dbJobs = await prisma.job.findMany({
+        orderBy: { postedAt: 'desc' },
+        take: 100, // Show more jobs at once
+        skip: (page - 1) * 100,
+      });
+
+      const totalCount = await prisma.job.count();
+
+      // Truncate descriptions to prevent showing too much text
+      const truncatedJobs = dbJobs.map(job => ({
+        ...job,
+        description: job.description.length > 200
+          ? job.description.substring(0, 200) + '...'
+          : job.description
+      }));
+
+      console.log(`Database results: ${truncatedJobs.length} jobs (total: ${totalCount})`);
+
+      return NextResponse.json({
+        results: truncatedJobs,
+        count: totalCount,
+        mean: null,
+        source: 'database',
+      });
+    }
+
     // If specific source requested, fetch only from that source
     if (source !== 'all') {
-      return await fetchFromSpecificSource(source, query, location, page, resultsPerPage);
+      return await fetchFromSpecificSource(source, query || 'career', location || 'US', page, resultsPerPage);
     }
 
     // Fetch from multiple sources in parallel
     const [adzunaJobs, museJobs, remotiveJobs, usaJobs] = await Promise.all([
-      fetchFromAdzuna(query, location, page, resultsPerPage),
-      location.toLowerCase().includes('remote') ? fetchJobsFromMuse(query, location) : [],
-      location.toLowerCase().includes('remote') ? fetchJobsFromRemotive() : [],
-      fetchJobsFromUSAJobs(query, location, page),
+      fetchFromAdzuna(query || 'career', location || 'US', page, resultsPerPage),
+      location?.toLowerCase().includes('remote') ? fetchJobsFromMuse(query || 'career', location) : [],
+      location?.toLowerCase().includes('remote') ? fetchJobsFromRemotive() : [],
+      fetchJobsFromUSAJobs(query || 'career', location || 'US', page),
     ]);
 
     // Combine all results
     const allJobs = [...adzunaJobs, ...museJobs, ...remotiveJobs, ...usaJobs];
+
+    console.log('Job API results:', {
+      adzuna: adzunaJobs.length,
+      muse: museJobs.length,
+      remotive: remotiveJobs.length,
+      usaJobs: usaJobs.length,
+      total: allJobs.length
+    });
 
     // Remove duplicates based on title and company
     const uniqueJobs = allJobs.reduce((acc, job) => {

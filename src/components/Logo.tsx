@@ -1,55 +1,48 @@
 'use client';
 
 import styled from 'styled-components';
+import Image from 'next/image';
 
 const LogoContainer = styled.div`
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1.5rem;
 `;
 
 const LogoCircle = styled.div`
-  width: 50px;
-  height: 50px;
+  width: 70px;
+  height: 70px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #7CFC00 0%, #00E5CC 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 1.5rem;
-  font-family: 'Comfortaa', cursive;
-  letter-spacing: -1px;
   position: relative;
-`;
-
-const LogoCircleText = styled.span`
-  background: linear-gradient(135deg, #7CFC00 0%, #00E5CC 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  -webkit-text-stroke: 3px white;
-  paint-order: stroke fill;
+  overflow: hidden;
+  background: transparent;
 `;
 
 const LogoText = styled.h1`
   font-family: 'Comfortaa', cursive;
-  font-size: 1.5rem;
+  font-size: 2.5rem;
   font-weight: 700;
   margin: 0;
-  background: linear-gradient(90deg, #38b6ff 0%, #5ecee6 50%, #40b6ff 100%);
+  background: linear-gradient(90deg, #7CFC00 0%, #7CFC00 20%, #00CED1 40%, #4A90E2 70%, #5DD9FC 100%);
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
 `;
 
 export function Logo() {
   return (
     <LogoContainer>
       <LogoCircle>
-        <LogoCircleText>pf</LogoCircleText>
+        <Image
+          src="/logo-icon.jpeg"
+          alt="AI Pathfinder Logo"
+          width={70}
+          height={70}
+          style={{ objectFit: 'cover', background: 'transparent' }}
+        />
       </LogoCircle>
-      <LogoText>ai-pathfinder</LogoText>
+      <LogoText>pathfinder</LogoText>
     </LogoContainer>
   );
 }

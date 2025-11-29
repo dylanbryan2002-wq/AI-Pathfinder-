@@ -9,7 +9,7 @@ import ActionSteps from '@/components/ActionSteps';
 
 const Container = styled.div`
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #F5F5F7;
 `;
 
 const Content = styled.div`
@@ -26,13 +26,13 @@ const Header = styled.div`
 const Title = styled.h1`
   font-size: 42px;
   font-weight: 700;
-  color: white;
+  color: #1a202c;
   margin-bottom: 12px;
 `;
 
 const Subtitle = styled.p`
   font-size: 18px;
-  color: rgba(255, 255, 255, 0.9);
+  color: #4a5568;
 `;
 
 const CareerCard = styled.div`
@@ -59,14 +59,6 @@ const CareerMeta = styled.div`
   margin-bottom: 16px;
 `;
 
-const SalaryBadge = styled.span`
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
-  color: #667eea;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-weight: 600;
-`;
-
 const CareerDescription = styled.p`
   font-size: 15px;
   color: #4a5568;
@@ -82,7 +74,7 @@ const QuickActions = styled.div`
 `;
 
 const Button = styled.button`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #5DD9FC 0%, #4A90E2 100%);
   color: white;
   border: none;
   padding: 12px 24px;
@@ -97,16 +89,10 @@ const Button = styled.button`
   }
 `;
 
-const SecondaryButton = styled(Button)`
-  background: white;
-  color: #667eea;
-  border: 2px solid #667eea;
-`;
-
 const Loading = styled.div`
   text-align: center;
   padding: 60px 20px;
-  color: white;
+  color: #4a5568;
   font-size: 20px;
 `;
 
@@ -137,7 +123,7 @@ const EmptyText = styled.p`
 `;
 
 const ExploreButton = styled.button`
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #5DD9FC 0%, #4A90E2 100%);
   color: white;
   border: none;
   padding: 14px 32px;
@@ -188,28 +174,6 @@ export default function ActionPlanPage() {
     }
   };
 
-  const handleRefreshPlan = async () => {
-    if (!career) return;
-
-    if (!confirm('This will regenerate your action plan. Continue?')) return;
-
-    try {
-      const response = await fetch('/api/action-steps/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ careerId: career.id }),
-      });
-
-      if (response.ok) {
-        // Wait a moment for generation to complete
-        setTimeout(() => {
-          fetchActionPlan();
-        }, 2000);
-      }
-    } catch (error) {
-      console.error('Failed to regenerate plan:', error);
-    }
-  };
 
   if (loading) {
     return (
@@ -247,14 +211,13 @@ export default function ActionPlanPage() {
       <Navigation />
       <Content>
         <Header>
-          <Title>My Action Plan</Title>
-          <Subtitle>Your personalized roadmap to success</Subtitle>
+          <Title>You're set on becoming a {career.title}</Title>
+          <Subtitle>Here's your next steps towards making this a reality!</Subtitle>
         </Header>
 
         <CareerCard>
           <CareerTitle>{career.title}</CareerTitle>
           <CareerMeta>
-            {career.avgSalary && <SalaryBadge>{career.avgSalary}</SalaryBadge>}
             {career.education && <span>{career.education}</span>}
             {career.growth && (
               <>
@@ -268,9 +231,6 @@ export default function ActionPlanPage() {
             <Button onClick={() => router.push(`/careers/${career.id}`)}>
               View Career Details
             </Button>
-            <SecondaryButton onClick={handleRefreshPlan}>
-              Regenerate Plan
-            </SecondaryButton>
           </QuickActions>
         </CareerCard>
 

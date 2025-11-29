@@ -144,12 +144,100 @@ const FiltersRow = styled.div`
   display: flex;
   gap: 0.75rem;
   overflow-x: auto;
+  overflow-y: visible;
   padding: 1rem;
+  padding-bottom: 320px;
+  margin-bottom: -300px;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  position: relative;
+  z-index: 10;
 
   &::-webkit-scrollbar {
     display: none;
+  }
+`;
+
+const DropdownWrapper = styled.div`
+  position: relative;
+  display: inline-block;
+`;
+
+const DropdownChip = styled.button<{ $active: boolean; $hasSelection: boolean }>`
+  background: ${({ $hasSelection, theme }) =>
+    $hasSelection ? theme.colors.primary.blue : theme.colors.background.card};
+  color: ${({ $hasSelection, theme }) =>
+    $hasSelection ? 'white' : theme.colors.text.primary};
+  border: 2px solid ${({ $hasSelection, theme }) =>
+    $hasSelection ? theme.colors.primary.blue : '#E5E7EB'};
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  padding: 0.5rem 1rem;
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  cursor: pointer;
+  white-space: nowrap;
+  transition: ${({ theme }) => theme.transitions.fast};
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.primary.blue};
+  }
+
+  svg {
+    width: 12px;
+    height: 12px;
+    transition: ${({ theme }) => theme.transitions.fast};
+    transform: ${({ $active }) => $active ? 'rotate(180deg)' : 'rotate(0deg)'};
+  }
+`;
+
+const DropdownMenu = styled.div<{ $isOpen: boolean }>`
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  min-width: 250px;
+  background: #FFFFFF;
+  border: 2px solid #4A90E2;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+  max-height: 300px;
+  overflow-y: auto;
+  display: ${({ $isOpen }) => $isOpen ? 'block' : 'none'};
+`;
+
+const DropdownSearch = styled.input`
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-bottom: 2px solid #E5E7EB;
+  outline: none;
+  font-size: ${({ theme }) => theme.typography.fontSize.base};
+  color: #000000;
+  background: #FFFFFF;
+
+  &::placeholder {
+    color: #9CA3AF;
+  }
+
+  &:focus {
+    border-bottom-color: ${({ theme }) => theme.colors.primary.blue};
+  }
+`;
+
+const DropdownOption = styled.div<{ $selected: boolean }>`
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: ${({ theme }) => theme.transitions.fast};
+  background: ${({ $selected }) =>
+    $selected ? '#E0F2FE' : '#FFFFFF'};
+  color: #000000;
+  font-size: ${({ theme }) => theme.typography.fontSize.base};
+
+  &:hover {
+    background: #F0F9FF;
   }
 `;
 
@@ -459,9 +547,60 @@ const filterCategories = [
   'Part-time',
   'Remote',
   'On-site',
-  'Entry Level',
-  'Mid Level',
-  'Senior',
+  'Internship',
+];
+
+// Common job roles/career types
+const roleOptions = [
+  'Software Engineer',
+  'Data Scientist',
+  'Product Manager',
+  'Designer',
+  'Marketing Manager',
+  'Sales Representative',
+  'Business Analyst',
+  'Project Manager',
+  'Accountant',
+  'Teacher',
+  'Nurse',
+  'Engineer',
+  'Consultant',
+  'Writer',
+  'Customer Service',
+  'Human Resources',
+  'Operations Manager',
+  'Financial Analyst',
+  'Research Scientist',
+  'Social Worker',
+];
+
+// Common US locations
+const locationOptions = [
+  'Remote',
+  'New York, NY',
+  'Los Angeles, CA',
+  'Chicago, IL',
+  'Houston, TX',
+  'Phoenix, AZ',
+  'Philadelphia, PA',
+  'San Antonio, TX',
+  'San Diego, CA',
+  'Dallas, TX',
+  'San Jose, CA',
+  'Austin, TX',
+  'Jacksonville, FL',
+  'Fort Worth, TX',
+  'Columbus, OH',
+  'Charlotte, NC',
+  'San Francisco, CA',
+  'Indianapolis, IN',
+  'Seattle, WA',
+  'Denver, CO',
+  'Boston, MA',
+  'Washington, DC',
+  'Nashville, TN',
+  'Portland, OR',
+  'Atlanta, GA',
 ];
 
 export default function JobsPage() {
@@ -474,6 +613,14 @@ export default function JobsPage() {
   const [triedCareers, setTriedCareers] = useState<Set<string>>(new Set());
   const [committedCareer, setCommittedCareer] = useState<string | null>(null);
   const [bookmarkedCareers, setBookmarkedCareers] = useState<Set<string>>(new Set());
+
+  // Dropdown states
+  const [selectedRole, setSelectedRole] = useState<string>('');
+  const [selectedLocation, setSelectedLocation] = useState<string>('');
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
+  const [isLocationDropdownOpen, setIsLocationDropdownOpen] = useState(false);
+  const [roleSearchQuery, setRoleSearchQuery] = useState('');
+  const [locationSearchQuery, setLocationSearchQuery] = useState('');
 
   // Mock match data for careers
   const mockMatches: { [key: string]: { percentage: number; description: string } } = {
@@ -500,22 +647,56 @@ export default function JobsPage() {
     if (activeTab === 'all') {
       fetchJobs();
     }
-  }, [searchQuery, activeFilter, activeTab]);
+  }, [searchQuery, activeFilter, activeTab, selectedRole, selectedLocation]);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('[data-dropdown]')) {
+        setIsRoleDropdownOpen(false);
+        setIsLocationDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const fetchData = async () => {
     try {
       setLoading(true);
 
+      // Fetch user's explore list to initialize tried careers
+      const exploreResponse = await fetch('/api/user/explore');
+      if (exploreResponse.ok) {
+        const exploreData = await exploreResponse.json();
+        const triedIds = new Set<string>(exploreData.exploreCareers.map((item: any) => item.careerId as string));
+        setTriedCareers(triedIds);
+      }
+
+      // Fetch user's committed career
+      const actionsResponse = await fetch('/api/user/actions');
+      if (actionsResponse.ok) {
+        const actionsData = await actionsResponse.json();
+        if (actionsData.committedCareer) {
+          setCommittedCareer(actionsData.committedCareer.careerId);
+        }
+      }
+
       // Fetch careers for recommended tab
       const careersResponse = await fetch('/api/careers');
       const careersData = await careersResponse.json();
+
+      // Generate match percentages for all careers (70-97%)
       const careersWithMatches = careersData.careers
-        .slice(0, 3) // Top 3 for recommended
-        .map((career: any) => ({
+        .map((career: any, index: number) => ({
           ...career,
-          matchPercentage: mockMatches[career.title]?.percentage || 85,
+          matchPercentage: mockMatches[career.title]?.percentage || (97 - (index * 2)), // Decreasing match from 97%
           matchDescription: mockMatches[career.title]?.description || 'Your profile matches well with this career path.',
-        }));
+        }))
+        .sort((a: any, b: any) => b.matchPercentage - a.matchPercentage) // Sort by match percentage descending
+        .slice(0, 10); // Top 10 for recommended
       setCareers(careersWithMatches);
 
       // Fetch initial jobs
@@ -546,31 +727,74 @@ export default function JobsPage() {
         }
       }
 
-      const jobsResponse = await fetch(`/api/jobs/search?${params.toString()}`);
+      const queryString = params.toString();
+      console.log('Fetching jobs with query:', queryString || '(empty)');
+      console.log('Active filter:', activeFilter);
+      console.log('Search query:', searchQuery);
+
+      const jobsResponse = await fetch(`/api/jobs/search?${queryString}`);
       const jobsData = await jobsResponse.json();
+      console.log('Jobs received from API:', jobsData.results?.length || 0, 'jobs');
+      console.log('Full API response:', jobsData);
       setJobs(jobsData.results || []);
     } catch (error) {
       console.error('Error fetching jobs:', error);
     }
   };
 
-  const handleTry = (careerId: string) => {
-    setTriedCareers((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(careerId)) {
-        newSet.delete(careerId);
+  const handleTry = async (careerId: string) => {
+    try {
+      if (triedCareers.has(careerId)) {
+        // Remove from explore list
+        await fetch(`/api/user/explore?careerId=${careerId}`, {
+          method: 'DELETE',
+        });
+        setTriedCareers((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(careerId);
+          return newSet;
+        });
       } else {
-        newSet.add(careerId);
+        // Add to explore list
+        await fetch('/api/user/explore', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ careerId }),
+        });
+        setTriedCareers((prev) => {
+          const newSet = new Set(prev);
+          newSet.add(careerId);
+          return newSet;
+        });
       }
-      return newSet;
-    });
+    } catch (error) {
+      console.error('Error updating explore list:', error);
+    }
   };
 
-  const handleCommit = (careerId: string) => {
-    if (committedCareer === careerId) {
-      setCommittedCareer(null);
-    } else {
-      setCommittedCareer(careerId);
+  const handleCommit = async (careerId: string) => {
+    try {
+      if (committedCareer === careerId) {
+        // Uncommit - delete committed career
+        await fetch('/api/user/commit', {
+          method: 'DELETE',
+        });
+        setCommittedCareer(null);
+      } else {
+        // Commit to career - create action plan and redirect
+        const response = await fetch('/api/user/commit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ careerId }),
+        });
+
+        if (response.ok) {
+          // Redirect to home page which will show the action plan
+          window.location.href = '/';
+        }
+      }
+    } catch (error) {
+      console.error('Error committing to career:', error);
     }
   };
 
@@ -627,17 +851,120 @@ export default function JobsPage() {
         </SearchBar>
       </SearchSection>
 
-      <FiltersRow>
-        {filterCategories.map((filter) => (
+      {activeTab === 'all' && (
+        <FiltersRow>
+          {/* All Jobs Filter - First */}
           <FilterChip
-            key={filter}
-            $active={activeFilter === filter}
-            onClick={() => setActiveFilter(filter)}
+            $active={activeFilter === 'All Jobs'}
+            onClick={() => setActiveFilter('All Jobs')}
           >
-            {filter}
+            All Jobs
           </FilterChip>
-        ))}
-      </FiltersRow>
+
+          {/* Role/Type of Job Dropdown */}
+          <DropdownWrapper data-dropdown>
+            <DropdownChip
+              $active={isRoleDropdownOpen}
+              $hasSelection={!!selectedRole}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Role dropdown clicked, current state:', isRoleDropdownOpen);
+                setIsRoleDropdownOpen(!isRoleDropdownOpen);
+                setIsLocationDropdownOpen(false);
+              }}
+            >
+              {selectedRole || 'Type of role'}
+              <svg viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </DropdownChip>
+            <DropdownMenu $isOpen={isRoleDropdownOpen}>
+              <DropdownSearch
+                type="text"
+                placeholder="Search roles..."
+                value={roleSearchQuery}
+                onChange={(e) => setRoleSearchQuery(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+              />
+              {roleOptions
+                .filter(role =>
+                  role.toLowerCase().includes(roleSearchQuery.toLowerCase())
+                )
+                .map((role) => (
+                  <DropdownOption
+                    key={role}
+                    $selected={selectedRole === role}
+                    onClick={() => {
+                      setSelectedRole(role === selectedRole ? '' : role);
+                      setIsRoleDropdownOpen(false);
+                      setRoleSearchQuery('');
+                    }}
+                  >
+                    {role}
+                  </DropdownOption>
+                ))}
+            </DropdownMenu>
+          </DropdownWrapper>
+
+          {/* Location Dropdown */}
+          <DropdownWrapper data-dropdown>
+            <DropdownChip
+              $active={isLocationDropdownOpen}
+              $hasSelection={!!selectedLocation}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Location dropdown clicked, current state:', isLocationDropdownOpen);
+                setIsLocationDropdownOpen(!isLocationDropdownOpen);
+                setIsRoleDropdownOpen(false);
+              }}
+            >
+              {selectedLocation || 'Location'}
+              <svg viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </DropdownChip>
+            <DropdownMenu $isOpen={isLocationDropdownOpen}>
+              <DropdownSearch
+                type="text"
+                placeholder="Search locations..."
+                value={locationSearchQuery}
+                onChange={(e) => setLocationSearchQuery(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+              />
+              {locationOptions
+                .filter(location =>
+                  location.toLowerCase().includes(locationSearchQuery.toLowerCase())
+                )
+                .map((location) => (
+                  <DropdownOption
+                    key={location}
+                    $selected={selectedLocation === location}
+                    onClick={() => {
+                      setSelectedLocation(location === selectedLocation ? '' : location);
+                      setIsLocationDropdownOpen(false);
+                      setLocationSearchQuery('');
+                    }}
+                  >
+                    {location}
+                  </DropdownOption>
+                ))}
+            </DropdownMenu>
+          </DropdownWrapper>
+
+          {/* Remaining Filter Chips */}
+          {filterCategories.slice(1).map((filter) => (
+            <FilterChip
+              key={filter}
+              $active={activeFilter === filter}
+              onClick={() => setActiveFilter(filter)}
+            >
+              {filter}
+            </FilterChip>
+          ))}
+        </FiltersRow>
+      )}
 
       <ContentArea>
         {loading ? (
@@ -679,8 +1006,8 @@ export default function JobsPage() {
               </SortButton>
             </ResultsHeader>
 
-            {jobs.map((job) => (
-              <JobCard key={job.id}>
+            {jobs.map((job, index) => (
+              <JobCard key={job.id || `job-${index}`}>
                 <JobHeader>
                   <CompanyLogo>{job.company.charAt(0)}</CompanyLogo>
                   <JobInfo>
@@ -717,11 +1044,13 @@ export default function JobsPage() {
 
                 <JobDescription>{job.description}</JobDescription>
 
-                <JobTags>
-                  {job.tags.map((tag: string) => (
-                    <Tag key={tag}>{tag}</Tag>
-                  ))}
-                </JobTags>
+                {job.tags && job.tags.length > 0 && (
+                  <JobTags>
+                    {job.tags.map((tag: string, tagIndex: number) => (
+                      <Tag key={`${job.id}-tag-${tagIndex}`}>{tag}</Tag>
+                    ))}
+                  </JobTags>
+                )}
 
                 <JobFooter>
                   <Salary>{job.salary}</Salary>

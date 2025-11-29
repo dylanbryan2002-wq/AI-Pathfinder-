@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { prisma } from '@/lib/prisma';
+import { getSystemPromptWithContext } from '@/lib/ai-prompts';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -35,47 +36,22 @@ export async function POST(request: NextRequest) {
         });
 
         if (user) {
-          userContext = `\n\nUser Profile Context:
+          userContext = `User Profile Context:
 - Name: ${user.name || 'Not provided'}
 - Personality Data: ${user.personalityData ? JSON.stringify(user.personalityData) : 'Not yet assessed'}
 - Skills: ${user.skillsData ? JSON.stringify(user.skillsData) : 'Not yet provided'}
 - Goals: ${user.goalsData ? JSON.stringify(user.goalsData) : 'Not yet provided'}
 - Values: ${user.valuesData ? JSON.stringify(user.valuesData) : 'Not yet provided'}
 - Interests: ${user.interestData ? JSON.stringify(user.interestData) : 'Not yet provided'}
-- Work Experience: ${user.workExperience ? JSON.stringify(user.workExperience) : 'Not yet provided'}
-
-Use this information to provide more personalized career advice. If some data is missing, ask thoughtful questions to fill in the gaps.`;
+- Work Experience: ${user.workExperience ? JSON.stringify(user.workExperience) : 'Not yet provided'}`;
         }
       } catch (err) {
         console.error('Error fetching user profile:', err);
       }
     }
 
-    // System prompt for AI Pathfinder
-    const systemPrompt = `You are AI Pathfinder, a career advisor helping users discover their ideal career path. Your role is to:
-
-1. Have empathetic conversations to understand the user's interests, skills, values, personality, and goals
-2. Ask thoughtful questions to gather psychometric data
-3. Provide career recommendations based on the user's profile
-4. Explain career matches and help users explore different career options
-5. Be encouraging and supportive throughout the career discovery process
-
-Key guidelines:
-- Be conversational and friendly, not robotic
-- Ask open-ended questions to understand the user better
-- Provide specific, actionable career advice
-- Reference real career data when discussing job prospects
-- Help users understand why certain careers match their profile
-- Encourage exploration before commitment
-
-When providing career recommendations, consider:
-- Interest alignment
-- Skills match
-- Values compatibility
-- Personality fit
-- Location preferences
-- Salary expectations
-- Work-life balance needs${userContext}`;
+    // Get system prompt from centralized prompts file
+    const systemPrompt = getSystemPromptWithContext(userContext);
 
     // Call OpenAI API
     const completion = await openai.chat.completions.create({

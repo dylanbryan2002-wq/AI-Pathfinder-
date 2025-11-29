@@ -47,7 +47,7 @@ const ProgressLabel = styled.div`
 const ProgressPercentage = styled.div`
   font-size: 24px;
   font-weight: 700;
-  color: #667eea;
+  color: #1a202c;
 `;
 
 const ProgressBarContainer = styled.div`
@@ -61,7 +61,7 @@ const ProgressBarContainer = styled.div`
 const ProgressBarFill = styled.div<{ progress: number }>`
   width: ${props => props.progress}%;
   height: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #5DD9FC 0%, #4A90E2 100%);
   transition: width 0.5s ease;
 `;
 
@@ -79,15 +79,15 @@ const StepsList = styled.div`
   gap: 16px;
 `;
 
-const StepCard = styled.div<{ completed: boolean }>`
-  border: 2px solid ${props => props.completed ? '#48bb78' : '#e2e8f0'};
+const StepCard = styled.div<{ $completed: boolean }>`
+  border: 2px solid ${props => props.$completed ? '#48bb78' : '#e2e8f0'};
   border-radius: 12px;
   padding: 20px;
   transition: all 0.3s ease;
-  background: ${props => props.completed ? 'rgba(72, 187, 120, 0.05)' : 'white'};
+  background: ${props => props.$completed ? 'rgba(72, 187, 120, 0.05)' : 'white'};
 
   &:hover {
-    border-color: ${props => props.completed ? '#48bb78' : '#cbd5e0'};
+    border-color: ${props => props.$completed ? '#48bb78' : '#cbd5e0'};
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   }
 `;
@@ -111,12 +111,12 @@ const StepContent = styled.div`
   flex: 1;
 `;
 
-const StepTitle = styled.h3<{ completed: boolean }>`
+const StepTitle = styled.h3<{ $completed: boolean }>`
   font-size: 18px;
   font-weight: 600;
-  color: ${props => props.completed ? '#48bb78' : '#1a202c'};
+  color: ${props => props.$completed ? '#48bb78' : '#1a202c'};
   margin-bottom: 8px;
-  text-decoration: ${props => props.completed ? 'line-through' : 'none'};
+  text-decoration: ${props => props.$completed ? 'line-through' : 'none'};
 `;
 
 const StepDescription = styled.p`
@@ -137,7 +137,7 @@ const TimeframeBadge = styled.span`
   align-items: center;
   gap: 6px;
   background: rgba(102, 126, 234, 0.1);
-  color: #667eea;
+  color: #1a202c;
   padding: 6px 12px;
   border-radius: 6px;
   font-size: 13px;
@@ -159,7 +159,7 @@ const ResourcesTitle = styled.div`
 
 const ResourceItem = styled.div`
   font-size: 14px;
-  color: #667eea;
+  color: #1a202c;
   margin-bottom: 4px;
 
   &:before {
@@ -171,15 +171,15 @@ const ResourceItem = styled.div`
 const NextMilestone = styled.div`
   margin-top: 24px;
   padding: 20px;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  background: linear-gradient(135deg, rgba(93, 217, 252, 0.1) 0%, rgba(74, 144, 226, 0.1) 100%);
   border-radius: 12px;
-  border-left: 4px solid #667eea;
+  border-left: 4px solid #5DD9FC;
 `;
 
 const MilestoneLabel = styled.div`
   font-size: 13px;
   font-weight: 600;
-  color: #667eea;
+  color: #1a202c;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 6px;
@@ -293,7 +293,7 @@ export default function ActionSteps({ careerId, actionPlan, onUpdate }: ActionSt
 
       <StepsList>
         {actionPlan.steps.map((step, index) => (
-          <StepCard key={index} completed={step.completed}>
+          <StepCard key={index} $completed={step.completed}>
             <StepHeader>
               <Checkbox
                 type="checkbox"
@@ -302,8 +302,8 @@ export default function ActionSteps({ careerId, actionPlan, onUpdate }: ActionSt
                 disabled={updating}
               />
               <StepContent>
-                <StepTitle completed={step.completed}>
-                  {index + 1}. {step.title}
+                <StepTitle $completed={step.completed}>
+                  Step {index + 1}: {step.title}
                 </StepTitle>
                 <StepDescription>{step.description}</StepDescription>
                 <StepMeta>

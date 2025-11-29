@@ -3,11 +3,12 @@
 import styled from 'styled-components';
 import { useRouter, useParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { Logo as LogoComponent } from '@/components/Logo';
 
 const PageContainer = styled.div`
   min-height: 100vh;
   background: ${({ theme }) => theme.colors.background.primary};
-  padding-bottom: 2rem;
+  padding-bottom: 80px;
 `;
 
 const Header = styled.div`
@@ -38,11 +39,7 @@ const BackButton = styled.button`
   }
 `;
 
-const HeaderTitle = styled.h1`
-  font-size: ${({ theme }) => theme.typography.fontSize.xl};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0;
+const LogoWrapper = styled.div`
   flex: 1;
 `;
 
@@ -54,13 +51,13 @@ const BookmarkButton = styled.button`
   color: ${({ theme }) => theme.colors.text.secondary};
 
   svg {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
   }
 `;
 
 const ContentArea = styled.div`
-  padding: 1rem;
+  padding: 1.5rem 1rem;
 `;
 
 const MatchBadge = styled.div<{ $percentage: number }>`
@@ -71,211 +68,58 @@ const MatchBadge = styled.div<{ $percentage: number }>`
       ? theme.colors.match.medium
       : theme.colors.match.low};
   color: white;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.9rem;
   border-radius: ${({ theme }) => theme.borderRadius.full};
-  font-size: ${({ theme }) => theme.typography.fontSize.lg};
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
   font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
   display: inline-block;
   margin-bottom: 1rem;
 `;
 
 const CareerTitle = styled.h2`
-  font-size: ${({ theme }) => theme.typography.fontSize['3xl']};
+  font-size: ${({ theme }) => theme.typography.fontSize['2xl']};
   font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
   color: ${({ theme }) => theme.colors.text.primary};
   margin: 0 0 1rem 0;
 `;
 
-const Section = styled.div`
-  margin-bottom: 2rem;
-`;
-
-const SectionTitle = styled.h3`
-  font-size: ${({ theme }) => theme.typography.fontSize.xl};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  color: ${({ theme }) => theme.colors.text.primary};
-  margin: 0 0 1rem 0;
-`;
-
-const MatchAnalysisGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.75rem;
-  margin-bottom: 2rem;
-`;
-
-const AnalysisButton = styled.button`
-  background: ${({ theme }) => theme.colors.background.card};
-  border: 2px solid #E5E7EB;
-  border-radius: ${({ theme }) => theme.borderRadius.xl};
-  padding: 1rem;
-  cursor: pointer;
-  transition: ${({ theme }) => theme.transitions.fast};
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-
-  &:hover {
-    border-color: ${({ theme }) => theme.colors.primary.blue};
-    transform: translateY(-2px);
-    box-shadow: ${({ theme }) => theme.shadows.md};
-  }
-`;
-
-const AnalysisIcon = styled.div`
-  width: 48px;
-  height: 48px;
-  border-radius: ${({ theme }) => theme.borderRadius.full};
-  background: ${({ theme }) => theme.colors.primary.gradient};
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
-  font-size: ${({ theme }) => theme.typography.fontSize.lg};
-`;
-
-const AnalysisLabel = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSize.base};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
-  color: ${({ theme }) => theme.colors.text.primary};
-`;
-
-const DayInLifeCard = styled.div`
-  background: ${({ theme }) => theme.colors.background.card};
-  border-radius: ${({ theme }) => theme.borderRadius.xl};
-  padding: 1.5rem;
-  box-shadow: ${({ theme }) => theme.shadows.card};
-  margin-bottom: 2rem;
-`;
-
-const DayInLifeText = styled.p`
+const MatchDescription = styled.p`
   font-size: ${({ theme }) => theme.typography.fontSize.base};
   color: ${({ theme }) => theme.colors.text.secondary};
   line-height: ${({ theme }) => theme.typography.lineHeight.relaxed};
   margin-bottom: 1rem;
 `;
 
-const ChatButton = styled.button`
-  background: ${({ theme }) => theme.colors.button.commit};
-  color: white;
-  border: none;
-  border-radius: ${({ theme }) => theme.borderRadius.full};
-  padding: 0.75rem 1.5rem;
-  font-size: ${({ theme }) => theme.typography.fontSize.base};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
-  cursor: pointer;
-  transition: ${({ theme }) => theme.transitions.fast};
+const CareerMeta = styled.div`
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-
-  &:hover {
-    opacity: 0.9;
-    transform: scale(1.02);
-  }
-
-  svg {
-    width: 20px;
-    height: 20px;
-  }
-`;
-
-const SalaryCard = styled.div`
-  background: ${({ theme }) => theme.colors.background.card};
-  border-radius: ${({ theme }) => theme.borderRadius.xl};
-  padding: 1.5rem;
-  box-shadow: ${({ theme }) => theme.shadows.card};
-  margin-bottom: 2rem;
-`;
-
-const SalaryCurve = styled.div`
-  position: relative;
-  height: 200px;
-  background: ${({ theme }) => theme.colors.background.secondary};
-  border-radius: ${({ theme }) => theme.borderRadius.lg};
-  padding: 1rem;
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-around;
-`;
-
-const SalaryBar = styled.div<{ $height: number; $active?: boolean }>`
-  width: 40px;
-  height: ${({ $height }) => $height}%;
-  background: ${({ $active, theme }) =>
-    $active ? theme.colors.primary.gradient : theme.colors.primary.blue};
-  border-radius: ${({ theme }) => theme.borderRadius.md} ${({ theme }) => theme.borderRadius.md} 0 0;
-  cursor: pointer;
-  transition: ${({ theme }) => theme.transitions.fast};
-  position: relative;
-
-  &:hover {
-    opacity: 0.8;
-    transform: scale(1.05);
-  }
-`;
-
-const SalaryLabel = styled.div`
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
   font-size: ${({ theme }) => theme.typography.fontSize.sm};
   color: ${({ theme }) => theme.colors.text.secondary};
-  text-align: center;
-  margin-top: 0.5rem;
 `;
 
-const SalaryValue = styled.div`
-  position: absolute;
-  top: -30px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: ${({ theme }) => theme.colors.text.primary};
-  color: white;
-  padding: 0.25rem 0.5rem;
-  border-radius: ${({ theme }) => theme.borderRadius.sm};
-  font-size: ${({ theme }) => theme.typography.fontSize.xs};
-  white-space: nowrap;
-`;
-
-const InfoGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-`;
-
-const InfoItem = styled.div`
+const MetaItem = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
 `;
 
-const InfoLabel = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSize.sm};
-  color: ${({ theme }) => theme.colors.text.secondary};
-  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
-`;
-
-const InfoValue = styled.span`
-  font-size: ${({ theme }) => theme.typography.fontSize.base};
-  color: ${({ theme }) => theme.colors.text.primary};
+const MetaLabel = styled.span`
   font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  color: ${({ theme }) => theme.colors.text.primary};
 `;
 
 const ButtonContainer = styled.div`
   display: flex;
   gap: 1rem;
-  margin-top: 2rem;
-  position: sticky;
-  bottom: 1rem;
-  z-index: ${({ theme }) => theme.zIndex.sticky};
+  margin-bottom: 2rem;
 `;
 
 const Button = styled.button<{ $variant: 'try' | 'commit' | 'added' | 'committed' }>`
   flex: 1;
   padding: 1rem 1.5rem;
   border-radius: ${({ theme }) => theme.borderRadius.full};
-  font-size: ${({ theme }) => theme.typography.fontSize.lg};
+  font-size: ${({ theme }) => theme.typography.fontSize.base};
   font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
   cursor: pointer;
   transition: ${({ theme }) => theme.transitions.normal};
@@ -309,20 +153,155 @@ const Button = styled.button<{ $variant: 'try' | 'commit' | 'added' | 'committed
         return `
           background: ${theme.colors.button.try};
           color: ${theme.colors.text.primary};
-          &:hover {
-            opacity: 0.9;
-          }
+          opacity: 0.8;
         `;
       case 'committed':
         return `
-          background: ${theme.colors.button.commitGradient};
+          background: ${theme.colors.button.commit};
           color: white;
-          &:hover {
-            opacity: 0.9;
-          }
+          opacity: 0.9;
         `;
     }
   }}
+`;
+
+const SectionHeading = styled.h3`
+  font-size: ${({ theme }) => theme.typography.fontSize.base};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  color: ${({ theme }) => theme.colors.text.primary};
+  text-align: center;
+  margin: 0 0 1rem 0;
+`;
+
+const MatchButtonsGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+`;
+
+const MatchButton = styled.button<{ $active?: boolean }>`
+  background: #E5E7EB;
+  border: 2px solid ${({ $active }) => ($active ? '#4A90E2' : '#E5E7EB')};
+  border-radius: ${({ theme }) => theme.borderRadius.full};
+  padding: 0.875rem 1rem;
+  font-size: ${({ theme }) => theme.typography.fontSize.base};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  color: ${({ theme }) => theme.colors.text.primary};
+  cursor: pointer;
+  transition: ${({ theme }) => theme.transitions.fast};
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.primary.blue};
+    background: white;
+  }
+`;
+
+const DayInLifeCard = styled.div`
+  background: #F5F5F7;
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+`;
+
+const DayInLifeTitle = styled.h4`
+  font-size: ${({ theme }) => theme.typography.fontSize.xl};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  color: ${({ theme }) => theme.colors.text.primary};
+  text-align: center;
+  margin: 0 0 0.5rem 0;
+`;
+
+const DayInLifeSubtitle = styled.p`
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  color: ${({ theme }) => theme.colors.text.secondary};
+  text-align: center;
+  margin: 0 0 1rem 0;
+`;
+
+const DayInLifeList = styled.ul`
+  list-style: disc;
+  padding-left: 0;
+  margin: 0 auto;
+  max-width: 600px;
+  text-align: left;
+  list-style-position: inside;
+
+  li {
+    font-size: ${({ theme }) => theme.typography.fontSize.base};
+    color: ${({ theme }) => theme.colors.text.primary};
+    line-height: ${({ theme }) => theme.typography.lineHeight.relaxed};
+    margin-bottom: 0.75rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+`;
+
+const ReadMoreLink = styled.button`
+  background: none;
+  border: none;
+  color: ${({ theme }) => theme.colors.button.commit};
+  font-size: ${({ theme }) => theme.typography.fontSize.base};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.medium};
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1rem auto 0;
+
+  &:hover {
+    opacity: 0.8;
+  }
+`;
+
+const SalaryChart = styled.div`
+  background: #F9FAFB;
+  border-radius: ${({ theme }) => theme.borderRadius.xl};
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+`;
+
+const ChartContainer = styled.div`
+  position: relative;
+  height: 300px;
+  margin-bottom: 2rem;
+`;
+
+const ChartSVG = styled.svg`
+  width: 100%;
+  height: 100%;
+`;
+
+const ChartNotesContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+`;
+
+const ChartNote = styled.p`
+  font-size: ${({ theme }) => theme.typography.fontSize.sm};
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin: 0;
+
+  strong {
+    font-weight: ${({ theme }) => theme.typography.fontWeight.bold};
+  }
+`;
+
+const Section = styled.div`
+  margin-bottom: 2rem;
+`;
+
+const SectionTitle = styled.h3`
+  font-size: ${({ theme }) => theme.typography.fontSize.xl};
+  font-weight: ${({ theme }) => theme.typography.fontWeight.semibold};
+  color: ${({ theme }) => theme.colors.text.primary};
+  margin: 0 0 1rem 0;
 `;
 
 const JobsGrid = styled.div`
@@ -405,69 +384,8 @@ const LoadingMessage = styled.div`
   text-align: center;
   padding: 2rem;
   font-size: ${({ theme }) => theme.typography.fontSize.lg};
-  color: ${({ theme}) => theme.colors.text.secondary};
+  color: ${({ theme }) => theme.colors.text.secondary};
 `;
-
-// Mock data for career details
-const careerDetails: { [key: string]: any } = {
-  '1': {
-    title: 'Youth Development Leader',
-    matchPercentage: 97,
-    dayInLife: 'As a Youth Development Leader, you start your day by preparing engaging activities for the youth center. You spend time mentoring teenagers, organizing community programs, and coordinating with parents and schools. Your afternoon involves leading group workshops on life skills, career exploration, and personal development. You wrap up by documenting progress and planning the next week\'s activities.',
-    salaryData: [
-      { label: '10%', value: 45000, height: 40 },
-      { label: '25%', value: 52000, height: 55 },
-      { label: 'Median', value: 64000, height: 80, active: true },
-      { label: '75%', value: 78000, height: 95 },
-      { label: '90%', value: 92000, height: 100 },
-    ],
-    avgSalary: '$64k',
-    requirements: 'Experience working with kids',
-    education: 'Bachelor\'s degree',
-    growth: '+12% (5 years)',
-  },
-  '2': {
-    title: 'Highschool Teacher',
-    matchPercentage: 95,
-    dayInLife: 'Your day begins with preparing lesson plans and setting up the classroom. You teach 5-6 classes throughout the day, engaging students in various subjects and fostering critical thinking. Between classes, you meet with students who need extra help, grade assignments, and collaborate with other teachers. After school, you participate in faculty meetings and parent-teacher conferences.',
-    salaryData: [
-      { label: '10%', value: 42000, height: 35 },
-      { label: '25%', value: 48000, height: 50 },
-      { label: 'Median', value: 58000, height: 75, active: true },
-      { label: '75%', value: 70000, height: 90 },
-      { label: '90%', value: 82000, height: 100 },
-    ],
-    avgSalary: '$58k',
-    requirements: 'Teaching certification',
-    education: 'Bachelor\'s + Teaching License',
-    growth: '+8% (5 years)',
-  },
-  '3': {
-    title: 'Nonprofit Program Manager',
-    matchPercentage: 93,
-    dayInLife: 'You begin by reviewing program metrics and planning strategic initiatives. Your morning involves meeting with stakeholders, funders, and community partners to discuss program impact. The afternoon is spent overseeing program implementation, supporting staff, and ensuring quality service delivery. You also handle budgeting, grant writing, and reporting to demonstrate program effectiveness.',
-    salaryData: [
-      { label: '10%', value: 48000, height: 42 },
-      { label: '25%', value: 58000, height: 60 },
-      { label: 'Median', value: 72000, height: 85, active: true },
-      { label: '75%', value: 88000, height: 95 },
-      { label: '90%', value: 105000, height: 100 },
-    ],
-    avgSalary: '$72k',
-    requirements: 'Program management experience',
-    education: 'Bachelor\'s or Master\'s degree',
-    growth: '+15% (5 years)',
-  },
-};
-
-const analysisCategories = [
-  { id: 'interest', label: 'Interest', icon: '🎯' },
-  { id: 'goals', label: 'Goals', icon: '🎯' },
-  { id: 'skills', label: 'Skills', icon: '⚡' },
-  { id: 'location', label: 'Location', icon: '📍' },
-  { id: 'personality', label: 'Personality', icon: '🧠' },
-  { id: 'values', label: 'Values', icon: '💎' },
-];
 
 export default function CareerDetailPage() {
   const router = useRouter();
@@ -479,7 +397,7 @@ export default function CareerDetailPage() {
   const [userActions, setUserActions] = useState<any>({});
   const [similarCareers, setSimilarCareers] = useState<any[]>([]);
   const [relatedJobs, setRelatedJobs] = useState<any[]>([]);
-  const [selectedSalary, setSelectedSalary] = useState<number | null>(null);
+  const [showFullDayInLife, setShowFullDayInLife] = useState(false);
 
   useEffect(() => {
     fetchCareerDetails();
@@ -494,8 +412,8 @@ export default function CareerDetailPage() {
       if (response.ok) {
         setCareer(data.career);
         setUserActions(data.userActions);
-        setSimilarCareers(data.similarCareers);
-        setRelatedJobs(data.relatedJobs);
+        setSimilarCareers(data.similarCareers || []);
+        setRelatedJobs(data.relatedJobs || []);
       }
     } catch (error) {
       console.error('Failed to fetch career details:', error);
@@ -524,7 +442,14 @@ export default function CareerDetailPage() {
     return (
       <PageContainer>
         <Header>
-          <HeaderTitle>Loading...</HeaderTitle>
+          <BackButton onClick={() => router.back()}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </BackButton>
+          <LogoWrapper>
+            <LogoComponent />
+          </LogoWrapper>
         </Header>
         <ContentArea>
           <LoadingMessage>Loading career details...</LoadingMessage>
@@ -542,24 +467,147 @@ export default function CareerDetailPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </BackButton>
-          <HeaderTitle>Career Not Found</HeaderTitle>
+          <LogoWrapper>
+            <LogoComponent />
+          </LogoWrapper>
         </Header>
+        <ContentArea>
+          <LoadingMessage>Career not found</LoadingMessage>
+        </ContentArea>
       </PageContainer>
     );
   }
 
-  // Parse JSON fields
-  const dayInLifeList = career.dayInLifeList ? (typeof career.dayInLifeList === 'string' ? JSON.parse(career.dayInLifeList) : career.dayInLifeList) : [];
-  const salaryRange = career.salaryRange ? (typeof career.salaryRange === 'string' ? JSON.parse(career.salaryRange) : career.salaryRange) : null;
+  // Parse JSON fields with error handling
+  let dayInLifeList = [];
+  try {
+    dayInLifeList = career.dayInLifeList ? (typeof career.dayInLifeList === 'string' ? JSON.parse(career.dayInLifeList) : career.dayInLifeList) : [];
+  } catch (e) {
+    console.error('Error parsing dayInLifeList:', e);
+    dayInLifeList = [];
+  }
+
+  let salaryRange = null;
+  try {
+    salaryRange = career.salaryRange ? (typeof career.salaryRange === 'string' ? JSON.parse(career.salaryRange) : career.salaryRange) : null;
+  } catch (e) {
+    console.error('Error parsing salaryRange:', e);
+    salaryRange = null;
+  }
 
   // Create salary data for visualization
-  const salaryData = salaryRange ? [
-    { label: '10%', value: salaryRange.percentiles?.[0] || salaryRange.min, height: 40 },
-    { label: '25%', value: salaryRange.percentiles?.[1] || salaryRange.min, height: 55 },
-    { label: 'Median', value: salaryRange.percentiles?.[2] || ((salaryRange.min + salaryRange.max) / 2), height: 80, active: true },
-    { label: '75%', value: salaryRange.percentiles?.[3] || salaryRange.max, height: 95 },
-    { label: '90%', value: salaryRange.percentiles?.[4] || salaryRange.max, height: 100 },
-  ] : [];
+  // Always show bell curve - use salaryRange if available, otherwise use avgSalary or defaults
+  let salaryData = [];
+
+  // Create evenly spaced salary data - 7 points with mean ALWAYS at position 50 (center)
+  // Positions: 10, 23.33, 36.67, 50 (MEAN/CENTER), 63.33, 76.67, 90
+  // Spacing: 13.33 units between each point (80 total span / 6 intervals)
+
+  if (salaryRange) {
+    const meanSalary = salaryRange.percentiles?.[2] || ((salaryRange.min + salaryRange.max) / 2) || 50;
+    const minSalary = salaryRange.percentiles?.[0] || salaryRange.min || Math.round(meanSalary * 0.6);
+    const maxSalary = salaryRange.percentiles?.[4] || salaryRange.max || Math.round(meanSalary * 1.8);
+
+    // Calculate step size: mean is at position 50 (center), we need 3 steps before and 3 after
+    // Total range from min to max, divided by 6 intervals
+    const salaryRange_span = maxSalary - minSalary;
+    const step = salaryRange_span / 6;
+
+    // Calculate salary values in thousands
+    const salaries = [
+      minSalary,
+      minSalary + step,
+      minSalary + step * 2,
+      minSalary + step * 3,
+      minSalary + step * 4,
+      minSalary + step * 5,
+      maxSalary
+    ];
+
+    salaryData = [
+      { label: `${Math.round(salaries[0] / 1000)}k-`, value: salaries[0], position: 10 },
+      { label: `${Math.round(salaries[1] / 1000)}k`, value: salaries[1], position: 23.33 },
+      { label: `${Math.round(salaries[2] / 1000)}k`, value: salaries[2], position: 36.67 },
+      { label: `${Math.round(salaries[3] / 1000)}k`, value: salaries[3], position: 50 },
+      { label: `${Math.round(salaries[4] / 1000)}k`, value: salaries[4], position: 63.33 },
+      { label: `${Math.round(salaries[5] / 1000)}k`, value: salaries[5], position: 76.67 },
+      { label: `${Math.round(salaries[6] / 1000)}k+`, value: salaries[6], position: 90 },
+    ];
+  } else if (career.avgSalary) {
+    // Use avgSalary to create a distribution, centered at position 50
+    // Parse the avgSalary string - could be like "$64k", "64000", etc.
+    let avgValue = parseInt(career.avgSalary.replace(/[^0-9]/g, '')) || 50000;
+
+    // If the value seems too small (like 64 from "64k"), multiply by 1000
+    if (avgValue < 1000) {
+      avgValue = avgValue * 1000;
+    }
+
+    const step = avgValue * 0.2; // 20% increments around the mean
+
+    // Calculate salary values
+    const salaries = [
+      avgValue - step * 3,
+      avgValue - step * 2,
+      avgValue - step,
+      avgValue,
+      avgValue + step,
+      avgValue + step * 2,
+      avgValue + step * 3
+    ];
+
+    salaryData = [
+      { label: `${Math.round(salaries[0] / 1000)}k-`, value: salaries[0], position: 10 },
+      { label: `${Math.round(salaries[1] / 1000)}k`, value: salaries[1], position: 23.33 },
+      { label: `${Math.round(salaries[2] / 1000)}k`, value: salaries[2], position: 36.67 },
+      { label: `${Math.round(salaries[3] / 1000)}k`, value: salaries[3], position: 50 },
+      { label: `${Math.round(salaries[4] / 1000)}k`, value: salaries[4], position: 63.33 },
+      { label: `${Math.round(salaries[5] / 1000)}k`, value: salaries[5], position: 76.67 },
+      { label: `${Math.round(salaries[6] / 1000)}k+`, value: salaries[6], position: 90 },
+    ];
+  } else {
+    // Default salary distribution centered at position 50
+    salaryData = [
+      { label: '30k-', value: 30, position: 10 },
+      { label: '40k', value: 40, position: 23.33 },
+      { label: '45k', value: 45, position: 36.67 },
+      { label: '50k', value: 50, position: 50 },
+      { label: '60k', value: 60, position: 63.33 },
+      { label: '70k', value: 70, position: 76.67 },
+      { label: '80k+', value: 80, position: 90 },
+    ];
+  }
+
+  // Mean is ALWAYS at position 50 (center of chart)
+  const meanPosition = 50;
+
+  // Calculate standard deviation based on salary range
+  // A wider range means more spread (larger stdDev)
+  const minPos = salaryData[0]?.position || 10;
+  const maxPos = salaryData[salaryData.length - 1]?.position || 90;
+  const salarySpan = maxPos - minPos;
+  // Standard deviation is roughly 1/6 of the total span for a normal distribution
+  const calculatedStdDev = salarySpan / 6;
+
+  // Generate bell curve path dynamically based on actual salary data
+  const generateBellCurvePath = () => {
+    const points: string[] = [];
+    for (let x = 0; x <= 100; x += 2) {
+      const mean = meanPosition;
+      const stdDev = calculatedStdDev;
+      const height = 150;
+      const exponent = -Math.pow(x - mean, 2) / (2 * Math.pow(stdDev, 2));
+      const y = 180 - (Math.exp(exponent) * height);
+      points.push(`${x * 5},${y}`);
+    }
+    return `M ${points.join(' L ')}`;
+  };
+
+  // Get match description - use match reason if available, otherwise generate generic text
+  const matchDescription = userActions.matchReason || career.description ||
+    `Your need to be around people, love of teaching, and love to work with kids has aligned perfectly with ${career.title}.`;
+
+  const displayedDayInLife = showFullDayInLife ? dayInLifeList : dayInLifeList.slice(0, 3);
 
   return (
     <PageContainer>
@@ -569,7 +617,9 @@ export default function CareerDetailPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </BackButton>
-        <HeaderTitle>{career.title}</HeaderTitle>
+        <LogoWrapper>
+          <LogoComponent />
+        </LogoWrapper>
         <BookmarkButton onClick={() => handleAction('bookmark')}>
           <svg viewBox="0 0 24 24" fill={userActions.isBookmarked ? 'currentColor' : 'none'} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
@@ -586,92 +636,159 @@ export default function CareerDetailPage() {
 
         <CareerTitle>{career.title}</CareerTitle>
 
-        <Section>
-          <SectionTitle>Why This Match?</SectionTitle>
-          <MatchAnalysisGrid>
-            {analysisCategories.map((category) => (
-              <AnalysisButton key={category.id} onClick={() => {/* TODO: Open AI chat overlay */}}>
-                <AnalysisIcon>{category.icon}</AnalysisIcon>
-                <AnalysisLabel>{category.label}</AnalysisLabel>
-              </AnalysisButton>
-            ))}
-          </MatchAnalysisGrid>
-        </Section>
+        <MatchDescription>
+          <strong>The Match:</strong> {matchDescription}
+        </MatchDescription>
 
-        {(career.dayInLife || dayInLifeList.length > 0) && (
-          <Section>
-            <SectionTitle>A Day in the Life</SectionTitle>
-            <DayInLifeCard>
-              {career.dayInLife && <DayInLifeText>{career.dayInLife}</DayInLifeText>}
-              {dayInLifeList.length > 0 && (
-                <ul style={{ paddingLeft: '1.5rem', margin: '1rem 0' }}>
-                  {dayInLifeList.map((item: string, index: number) => (
-                    <li key={index} style={{ marginBottom: '0.5rem', color: '#4a5568' }}>{item}</li>
-                  ))}
-                </ul>
-              )}
-              <ChatButton onClick={() => router.push('/chat')}>
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+        <CareerMeta>
+          {career.avgSalary && (
+            <MetaItem>
+              <MetaLabel>Avg. Salary:</MetaLabel>
+              <span>{career.avgSalary}</span>
+            </MetaItem>
+          )}
+          {career.requirements && (
+            <MetaItem>
+              <MetaLabel>Typical Requirements:</MetaLabel>
+              <span>{career.requirements}</span>
+            </MetaItem>
+          )}
+        </CareerMeta>
+
+        <ButtonContainer>
+          <Button
+            $variant={userActions.isTrying ? 'added' : 'try'}
+            onClick={() => handleAction('try')}
+          >
+            {userActions.isTrying ? (
+              <>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
                 </svg>
-                Ask me more about this
-              </ChatButton>
-            </DayInLifeCard>
-          </Section>
+                Added
+              </>
+            ) : (
+              'Try'
+            )}
+          </Button>
+
+          <Button
+            $variant={userActions.isCommitted ? 'committed' : 'commit'}
+            onClick={() => handleAction('commit')}
+          >
+            {userActions.isCommitted ? (
+              <>
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+                </svg>
+                Committed
+              </>
+            ) : (
+              'Commit'
+            )}
+          </Button>
+        </ButtonContainer>
+
+        <SectionHeading>See how you match in these different areas</SectionHeading>
+        <MatchButtonsGrid>
+          <MatchButton $active={true}>Interest</MatchButton>
+          <MatchButton>Goals</MatchButton>
+          <MatchButton>Skills</MatchButton>
+          <MatchButton>Location</MatchButton>
+          <MatchButton>Personality</MatchButton>
+          <MatchButton>Values</MatchButton>
+        </MatchButtonsGrid>
+
+        {dayInLifeList.length > 0 && (
+          <DayInLifeCard>
+            <DayInLifeTitle>A day in the life</DayInLifeTitle>
+            <DayInLifeSubtitle>
+              Here's what a day in the life can look like as a {career.title.toLowerCase()}
+            </DayInLifeSubtitle>
+            <DayInLifeList>
+              {displayedDayInLife.map((item: string, index: number) => (
+                <li key={index}>{item}</li>
+              ))}
+            </DayInLifeList>
+            {dayInLifeList.length > 3 && !showFullDayInLife && (
+              <ReadMoreLink onClick={() => setShowFullDayInLife(true)}>
+                Read more
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </ReadMoreLink>
+            )}
+          </DayInLifeCard>
         )}
 
-        {(career.avgSalary || salaryData.length > 0) && (
-          <Section>
-            <SectionTitle>Salary Information</SectionTitle>
-            <SalaryCard>
-              {salaryData.length > 0 && (
-                <SalaryCurve>
-                  {salaryData.map((data: any, index: number) => (
-                    <div key={index} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <SalaryBar
-                        $height={data.height}
-                        $active={data.active}
-                        onMouseEnter={() => setSelectedSalary(index)}
-                        onMouseLeave={() => setSelectedSalary(null)}
-                      >
-                        {(selectedSalary === index || data.active) && (
-                          <SalaryValue>${(data.value / 1000).toFixed(0)}k</SalaryValue>
-                        )}
-                      </SalaryBar>
-                      <SalaryLabel>{data.label}</SalaryLabel>
-                    </div>
-                  ))}
-                </SalaryCurve>
-              )}
+        {salaryData.length > 0 && (
+          <SalaryChart>
+            <ChartContainer>
+              <ChartSVG viewBox="0 0 500 220" preserveAspectRatio="xMidYMid meet">
+                {/* Arrow marker definitions */}
+                <defs>
+                  <marker
+                    id="arrow-start"
+                    markerWidth="4"
+                    markerHeight="4"
+                    refX="4"
+                    refY="2"
+                    orient="auto"
+                  >
+                    <path d="M 0 2 L 4 0 L 4 4 Z" fill="#000000" />
+                  </marker>
+                  <marker
+                    id="arrow-end"
+                    markerWidth="4"
+                    markerHeight="4"
+                    refX="0"
+                    refY="2"
+                    orient="auto"
+                  >
+                    <path d="M 4 2 L 0 0 L 0 4 Z" fill="#000000" />
+                  </marker>
+                </defs>
+                {/* Bell curve path */}
+                <path
+                  d={generateBellCurvePath()}
+                  stroke="#000000"
+                  strokeWidth="2"
+                  fill="none"
+                  markerStart="url(#arrow-start)"
+                  markerEnd="url(#arrow-end)"
+                />
+                {/* Data points and vertical lines */}
+                {salaryData.map((data: any, index: number) => {
+                  const x = (data.position / 100) * 500;
+                  const mean = meanPosition;
+                  const stdDev = calculatedStdDev;
+                  const height = 150;
+                  const exponent = -Math.pow(data.position - mean, 2) / (2 * Math.pow(stdDev, 2));
+                  const y = 180 - (Math.exp(exponent) * height);
 
-              <InfoGrid>
-                {career.avgSalary && (
-                  <InfoItem>
-                    <InfoLabel>Avg. Salary:</InfoLabel>
-                    <InfoValue>{career.avgSalary}</InfoValue>
-                  </InfoItem>
-                )}
-                {career.growth && (
-                  <InfoItem>
-                    <InfoLabel>Growth (5yr):</InfoLabel>
-                    <InfoValue>{career.growth}</InfoValue>
-                  </InfoItem>
-                )}
-                {career.education && (
-                  <InfoItem>
-                    <InfoLabel>Education:</InfoLabel>
-                    <InfoValue>{career.education}</InfoValue>
-                  </InfoItem>
-                )}
-                {career.requirements && (
-                  <InfoItem>
-                    <InfoLabel>Requirements:</InfoLabel>
-                    <InfoValue>{career.requirements}</InfoValue>
-                  </InfoItem>
-                )}
-              </InfoGrid>
-            </SalaryCard>
-          </Section>
+                  return (
+                    <g key={index}>
+                      <line x1={x} y1={y} x2={x} y2="180" stroke="#E5E7EB" strokeWidth="1.5" />
+                      <circle cx={x} cy={y} r="5" fill="#5DD9FC" />
+                    </g>
+                  );
+                })}
+                {/* Labels */}
+                {salaryData.map((data: any, index: number) => {
+                  const x = (data.position / 100) * 500;
+                  return (
+                    <text key={`label-${index}`} x={x} y="205" fontSize="14" fontWeight="500" textAnchor="middle" fill="#000000">
+                      {data.label}
+                    </text>
+                  );
+                })}
+              </ChartSVG>
+            </ChartContainer>
+            <ChartNotesContainer>
+              <ChartNote><strong>*In Thousands</strong></ChartNote>
+              <ChartNote><strong>*Click on the curve to explore what factors lead to that income level.</strong></ChartNote>
+            </ChartNotesContainer>
+          </SalaryChart>
         )}
 
         {relatedJobs.length > 0 && (
@@ -720,40 +837,6 @@ export default function CareerDetailPage() {
             </CareersGrid>
           </Section>
         )}
-
-        <ButtonContainer>
-          <Button
-            $variant={userActions.isTrying ? 'added' : 'try'}
-            onClick={() => handleAction('try')}
-          >
-            {userActions.isTrying ? (
-              <>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-                </svg>
-                Added
-              </>
-            ) : (
-              'Try'
-            )}
-          </Button>
-
-          <Button
-            $variant={userActions.isCommitted ? 'committed' : 'commit'}
-            onClick={() => handleAction('commit')}
-          >
-            {userActions.isCommitted ? (
-              <>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
-                </svg>
-                Committed
-              </>
-            ) : (
-              'Commit'
-            )}
-          </Button>
-        </ButtonContainer>
       </ContentArea>
     </PageContainer>
   );
