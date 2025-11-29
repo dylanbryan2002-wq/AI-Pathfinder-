@@ -68,7 +68,9 @@
       "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/originals/A/**)",
       "WebFetch(domain:services.onetcenter.org)",
       "Bash(lsof:*)",
-      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/resources/renders/E/**)"
+      "Read(//Users/dylanbryan/Pictures/Photos Library.photoslibrary/resources/renders/E/**)",
+      "Bash(git remote add:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []

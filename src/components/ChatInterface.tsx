@@ -1244,6 +1244,7 @@ export function ChatInterface() {
           </VoiceIndicator>
         )}
 
+        {/* Show match careers button when user has enough conversation history */}
         {session?.user && messages.length > 2 && !isRecording && (
           <MatchButton onClick={() => handleMatchCareers()} disabled={isMatching}>
             {isMatching ? (
